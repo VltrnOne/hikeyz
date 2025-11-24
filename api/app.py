@@ -78,8 +78,8 @@ def create_checkout_session():
     try:
         data = request.get_json()
         plan_type = data.get('plan', 'quick')
-        success_url = data.get('success_url', 'https://hitbot.agency/success')
-        cancel_url = data.get('cancel_url', 'https://hitbot.agency/cancel')
+        success_url = data.get('success_url', 'https://hikeyz.com/success')
+        cancel_url = data.get('cancel_url', 'https://hikeyz.com/cancel')
 
         if plan_type not in PRICING_PLANS:
             return jsonify({'error': 'Invalid plan type'}), 400

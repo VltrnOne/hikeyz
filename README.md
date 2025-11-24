@@ -75,7 +75,7 @@ Required variables:
 ### 4. Set Up Webhook
 
 1. In Stripe Dashboard, go to Developers > Webhooks
-2. Add endpoint: `https://hitbot.agency/api/webhook`
+2. Add endpoint: `https://hikeyz.com/api/webhook`
 3. Select events: `checkout.session.completed`, `payment_intent.succeeded`, `payment_intent.payment_failed`
 4. Copy webhook signing secret to `.env`
 
@@ -114,7 +114,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ### Prerequisites
 
 - cPanel access to your SiteGround account
-- Domain: hitbot.agency
+- Domain: hikeyz.com
 - Python 3.9+ support
 - MySQL database
 
@@ -152,7 +152,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 5. **Set up Passenger**
    - In cPanel > Setup Python App
    - Set application root: `/home/username/hitbot-agency/api`
-   - Set application URL: `hitbot.agency`
+   - Set application URL: `hikeyz.com`
    - Set entry point: `app:app`
 
 6. **Configure Cron Jobs**
@@ -246,9 +246,9 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ## Support
 
 For issues or questions:
-- Email: support@hitbot.agency
+- Email: support@hikeyz.com
 - Discord: [Link to Discord]
-- Documentation: https://hitbot.agency/docs
+- Documentation: https://hikeyz.com/docs
 
 ## License
 

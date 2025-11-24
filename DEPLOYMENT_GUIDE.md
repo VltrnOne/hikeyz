@@ -1,5 +1,5 @@
 # SiteGround Deployment Guide
-## SUNO Downloader Pro - hitbot.agency
+## SUNO Downloader Pro - hikeyz.com
 
 Complete step-by-step guide to deploy your SaaS to SiteGround.
 
@@ -8,7 +8,7 @@ Complete step-by-step guide to deploy your SaaS to SiteGround.
 ## Pre-Deployment Checklist
 
 - [ ] SiteGround hosting account active
-- [ ] Domain hitbot.agency pointed to SiteGround
+- [ ] Domain hikeyz.com pointed to SiteGround
 - [ ] Stripe account created with API keys
 - [ ] Google AdSense account approved
 - [ ] SSL certificate ready (Let's Encrypt via cPanel)
@@ -71,7 +71,7 @@ Complete step-by-step guide to deploy your SaaS to SiteGround.
 ### SSH into SiteGround
 
 ```bash
-ssh username@hitbot.agency -p18765
+ssh username@hikeyz.com -p18765
 ```
 
 ### Create Virtual Environment
@@ -130,7 +130,7 @@ STRIPE_PRO_PRICE_ID=price_pro_id_from_step_1
 # Application Settings
 APP_ENV=production
 APP_SECRET_KEY=generate_random_64_char_string
-APP_BASE_URL=https://hitbot.agency
+APP_BASE_URL=https://hikeyz.com
 
 # Database (from Step 4)
 DATABASE_URL=mysql://username_suno_user:your_password@localhost/username_suno
@@ -191,10 +191,10 @@ RewriteRule ^(.*)$ /index.html [L]
 ## Step 7: Configure Domain DNS
 
 1. In cPanel → **Zone Editor**
-2. Add/Update records for hitbot.agency:
+2. Add/Update records for hikeyz.com:
    ```
    Type: A
-   Name: hitbot.agency
+   Name: hikeyz.com
    Points to: [Your SiteGround server IP]
 
    Type: A
@@ -207,7 +207,7 @@ RewriteRule ^(.*)$ /index.html [L]
 ## Step 8: Enable SSL Certificate
 
 1. In cPanel → **Let's Encrypt SSL**
-2. Select domain: `hitbot.agency` and `www.hitbot.agency`
+2. Select domain: `hikeyz.com` and `www.hikeyz.com`
 3. Click **Install**
 4. Wait for installation (2-5 minutes)
 
@@ -227,7 +227,7 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 1. Go to Stripe Dashboard → **Developers** → **Webhooks**
 2. Click **Add endpoint**
-3. Endpoint URL: `https://hitbot.agency/api/webhook`
+3. Endpoint URL: `https://hikeyz.com/api/webhook`
 4. Events to send:
    - `checkout.session.completed`
    - `payment_intent.succeeded`
@@ -245,7 +245,7 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 ### Test Landing Page
 
-Visit: https://hitbot.agency
+Visit: https://hikeyz.com
 
 Should see:
 - Landing page loads correctly
@@ -265,10 +265,10 @@ Should see:
 
 ```bash
 # Health check
-curl https://hitbot.agency/api/
+curl https://hikeyz.com/api/
 
 # Pricing
-curl https://hitbot.agency/api/pricing
+curl https://hikeyz.com/api/pricing
 ```
 
 ---
@@ -423,6 +423,6 @@ If you encounter issues:
 
 🎉 **Deployment Complete!**
 
-Your SUNO Downloader Pro is now live at **https://hitbot.agency**
+Your SUNO Downloader Pro is now live at **https://hikeyz.com**
 
 Remember to test thoroughly before promoting to customers.

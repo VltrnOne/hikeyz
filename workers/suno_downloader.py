@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SUNO Downloader Worker for hitbot.agency
+SUNO Downloader Worker for hikeyz.com
 Integrates with the SaaS backend API
 """
 
