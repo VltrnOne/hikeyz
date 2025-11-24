@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download in Progress - SUNO Downloader Pro</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .progress-container {
+            max-width: 900px;
+            margin: 6rem auto 2rem;
+            padding: 0 2rem;
+        }
+
+        .progress-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 3rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        .status-badge.processing {
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+        }
+
+        .status-badge.completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .status-icon {
+            width: 8px;
+            height: 8px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .progress-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .progress-header p {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 1rem;
+            transition: width 0.3s ease;
+        }
+
+        .current-song {
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .current-song-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .current-song-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .download-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1.125rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            margin-top: 2rem;
+        }
+
+        .download-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2);
+        }
+
+        .download-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .ad-container {
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+            min-height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ad-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .session-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            margin-top: 2rem;
+        }
+
+        .session-info-item {
+            text-align: center;
+        }
+
+        .session-info-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .session-info-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .error-message {
+            padding: 1.5rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid rgba(239, 68, 68, 0.2);
+            border-radius: 1rem;
+            color: #ef4444;
+            margin: 1.5rem 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--bg-secondary);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_ADSENSE_ID"
+            crossorigin="anonymous"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 2L6 7V17C6 22.55 10.84 27.74 16 29C21.16 27.74 26 22.55 26 17V7L16 2Z" fill="#6366f1"/>
+                        <path d="M14 16V20L19 17L14 14V16Z" fill="white"/>
+                    </svg>
+                    <span>SUNO Downloader Pro</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Progress Section -->
+    <div class="progress-container">
+        <div class="progress-card">
+            <div class="status-badge processing" id="statusBadge">
+                <div class="status-icon"></div>
+                <span id="statusText">Processing</span>
+            </div>
+
+            <div class="progress-header">
+                <h1 id="progressTitle">Downloading Your Songs</h1>
+                <p id="progressDescription">Please wait while we download all your SUNO songs</p>
+            </div>
+
+            <div class="progress-stats">
+                <div class="stat-box">
+                    <span class="stat-number" id="downloadedCount">0</span>
+                    <span class="stat-label">Downloaded</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number" id="totalCount">0</span>
+                    <span class="stat-label">Total Songs</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number" id="failedCount">0</span>
+                    <span class="stat-label">Failed</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number" id="progressPercent">0%</span>
+                    <span class="stat-label">Complete</span>
+                </div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="current-song" id="currentSongContainer">
+                <div class="current-song-label">Currently Downloading:</div>
+                <div class="current-song-title" id="currentSongTitle">Initializing...</div>
+            </div>
+
+            <div id="errorContainer"></div>
+
+            <button class="download-button" id="downloadButton" style="display: none;" disabled>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 12L6 8H9V2H11V8H14L10 12Z" fill="currentColor"/>
+                    <path d="M16 16H4V11H2V16C2 17.1 2.9 18 4 18H16C17.1 18 18 17.1 18 16V11H16V16Z" fill="currentColor"/>
+                </svg>
+                Download ZIP File
+            </button>
+
+            <div class="session-info">
+                <div class="session-info-item">
+                    <div class="session-info-label">Plan</div>
+                    <div class="session-info-value" id="planName">-</div>
+                </div>
+                <div class="session-info-item">
+                    <div class="session-info-label">Time Remaining</div>
+                    <div class="session-info-value" id="timeRemaining">-</div>
+                </div>
+                <div class="session-info-item">
+                    <div class="session-info-label">Estimated Completion</div>
+                    <div class="session-info-value" id="estimatedTime">Calculating...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ad Container -->
+        <div class="ad-container">
+            <div>
+                <div class="ad-label">Advertisement</div>
+                <!-- Google AdSense Ad Unit -->
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-YOUR_ADSENSE_ID"
+                     data-ad-slot="YOUR_AD_SLOT_ID"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get job ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('job_id');
+        const sessionToken = urlParams.get('session_token');
+
+        if (!jobId) {
+            document.getElementById('errorContainer').innerHTML = `
+                <div class="error-message">
+                    <strong>Error:</strong> No job ID provided. Please start a download from the main page.
+                </div>
+            `;
+        }
+
+        // Poll for job status updates
+        let pollInterval;
+        let startTime = Date.now();
+
+        function updateProgress(data) {
+            const { status, progress, session } = data;
+
+            // Update status badge
+            const statusBadge = document.getElementById('statusBadge');
+            const statusText = document.getElementById('statusText');
+
+            if (status === 'completed') {
+                statusBadge.className = 'status-badge completed';
+                statusText.textContent = 'Completed';
+                document.getElementById('progressTitle').textContent = 'Download Complete!';
+                document.getElementById('progressDescription').textContent = 'Your songs are ready to download';
+                clearInterval(pollInterval);
+
+                // Show download button
+                const downloadBtn = document.getElementById('downloadButton');
+                downloadBtn.style.display = 'inline-flex';
+                downloadBtn.disabled = false;
+                downloadBtn.onclick = () => {
+                    window.location.href = `/api/download-file/${jobId}`;
+                };
+            } else if (status === 'failed') {
+                statusBadge.className = 'status-badge';
+                statusBadge.style.background = 'rgba(239, 68, 68, 0.1)';
+                statusBadge.style.color = '#ef4444';
+                statusText.textContent = 'Failed';
+                clearInterval(pollInterval);
+
+                document.getElementById('errorContainer').innerHTML = `
+                    <div class="error-message">
+                        <strong>Download Failed:</strong> There was an error processing your download. Please contact support.
+                    </div>
+                `;
+            }
+
+            // Update progress stats
+            if (progress) {
+                document.getElementById('downloadedCount').textContent = progress.downloaded || 0;
+                document.getElementById('totalCount').textContent = progress.total_songs || 0;
+                document.getElementById('failedCount').textContent = progress.failed || 0;
+
+                const percent = progress.total_songs > 0
+                    ? Math.round((progress.downloaded / progress.total_songs) * 100)
+                    : 0;
+                document.getElementById('progressPercent').textContent = percent + '%';
+                document.getElementById('progressBar').style.width = percent + '%';
+
+                if (progress.current_song) {
+                    document.getElementById('currentSongTitle').textContent = progress.current_song;
+                }
+
+                // Estimate completion time
+                if (progress.downloaded > 0 && progress.total_songs > 0) {
+                    const elapsed = (Date.now() - startTime) / 1000; // seconds
+                    const rate = progress.downloaded / elapsed; // songs per second
+                    const remaining = progress.total_songs - progress.downloaded;
+                    const estimatedSeconds = remaining / rate;
+                    const minutes = Math.floor(estimatedSeconds / 60);
+                    const seconds = Math.floor(estimatedSeconds % 60);
+                    document.getElementById('estimatedTime').textContent =
+                        `~${minutes}m ${seconds}s`;
+                }
+            }
+
+            // Update session info
+            if (session) {
+                document.getElementById('planName').textContent = session.plan_name || '-';
+
+                if (session.time_remaining) {
+                    const minutes = Math.floor(session.time_remaining / 60);
+                    const seconds = Math.floor(session.time_remaining % 60);
+                    document.getElementById('timeRemaining').textContent = `${minutes}m ${seconds}s`;
+                }
+            }
+        }
+
+        function pollJobStatus() {
+            fetch(`/api/job-status/${jobId}`)
+                .then(res => res.json())
+                .then(data => {
+                    updateProgress(data);
+                })
+                .catch(err => {
+                    console.error('Error polling job status:', err);
+                });
+        }
+
+        // Start polling if we have a job ID
+        if (jobId) {
+            pollJobStatus(); // Initial poll
+            pollInterval = setInterval(pollJobStatus, 2000); // Poll every 2 seconds
+        }
+
+        // Initialize AdSense
+        (adsbygoogle = window.adsbygoogle || []).push({});
+
+        // Track ad impressions
+        setTimeout(() => {
+            fetch('/api/analytics', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_type: 'ad_impression',
+                    session_token: sessionToken,
+                    job_id: jobId
+                })
+            });
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+# Environment variables (NEVER COMMIT THESE!)
+.env
+.env.local
+.env.production
+
+# Secrets and credentials
+config/secrets.json
+*.key
+*.pem
+
+# User data and downloads
+downloads/
+*.mp3
+*.zip
+
+# Database dumps
+*.sql.gz
+*.dump
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Session files
+sessions/
