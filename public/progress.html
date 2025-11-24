@@ -327,6 +327,9 @@
     </div>
 
     <script>
+        // API Configuration
+        const API_BASE_URL = 'https://hikeyz-api.onrender.com';
+
         // Get job ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const jobId = urlParams.get('job_id');
@@ -363,7 +366,7 @@
                 downloadBtn.style.display = 'inline-flex';
                 downloadBtn.disabled = false;
                 downloadBtn.onclick = () => {
-                    window.location.href = `/api/download-file/${jobId}`;
+                    window.location.href = `${API_BASE_URL}/api/download-file/${jobId}`;
                 };
             } else if (status === 'failed') {
                 statusBadge.className = 'status-badge';
@@ -421,7 +424,7 @@
         }
 
         function pollJobStatus() {
-            fetch(`/api/job-status/${jobId}`)
+            fetch(`${API_BASE_URL}/api/job-status/${jobId}`)
                 .then(res => res.json())
                 .then(data => {
                     updateProgress(data);
@@ -442,7 +445,7 @@
 
         // Track ad impressions
         setTimeout(() => {
-            fetch('/api/analytics', {
+            fetch(`${API_BASE_URL}/api/analytics`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
