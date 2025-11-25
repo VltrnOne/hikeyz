@@ -148,6 +148,35 @@ jobs:
           mkdir -p ~/hikeyz/downloads 2>&1 || echo "⚠️  Failed to create downloads directory"
           mkdir -p ~/hikeyz/logs 2>&1 || echo "⚠️  Failed to create logs directory"
 
+          # Copy frontend HTML files to web root
+          echo "Deploying frontend files to public_html..."
+          if [ -d ~/hikeyz/public ]; then
+            # Create backup of existing files
+            if [ -d ~/public_html ] && [ "$(ls -A ~/public_html 2>/dev/null)" ]; then
+              echo "Backing up existing public_html..."
+              mkdir -p ~/public_html_backup 2>&1 || echo "⚠️  Failed to create backup directory"
+              cp -r ~/public_html/* ~/public_html_backup/ 2>&1 || echo "⚠️  Backup failed"
+            fi
+
+            # Create public_html if it doesn't exist
+            mkdir -p ~/public_html 2>&1 || echo "⚠️  Failed to create public_html directory"
+
+            # Copy all files from public/ to public_html/
+            echo "Copying HTML, CSS, JS files..."
+            cp -r ~/hikeyz/public/* ~/public_html/ 2>&1 || echo "⚠️  Failed to copy frontend files"
+
+            # Set proper permissions
+            chmod -R 755 ~/public_html 2>&1 || echo "⚠️  Failed to set permissions"
+
+            echo "✓ Frontend files deployed to ~/public_html/"
+
+            # List deployed files
+            echo "Deployed files:"
+            ls -lh ~/public_html/ 2>&1 || echo "⚠️  Failed to list files"
+          else
+            echo "⚠️  WARNING: ~/hikeyz/public directory not found!"
+          fi
+
           # Restart Python application (if using SiteGround Python App)
           # Note: SiteGround Python apps auto-restart on file changes
           # If you need manual restart, uncomment the line below:
@@ -156,6 +185,7 @@ jobs:
           echo "==================================="
           echo "Deployment completed successfully!"
           echo "==================================="
+          echo "Frontend deployed to: ~/public_html/"
           echo "Application should auto-restart"
           echo "Check logs in: ~/hikeyz/logs/"
           ENDSSH
