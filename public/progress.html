@@ -545,14 +545,29 @@
             if (isFreeTier && sessionToken) {
                 // Show download start form for free tier users
                 document.getElementById('errorContainer').innerHTML = `
-                    <div class="free-tier-start" style="text-align: center; padding: 2rem;">
-                        <h2 style="margin-bottom: 1rem;">Start Your Free Download</h2>
-                        <p style="color: #718096; margin-bottom: 2rem;">You have <strong id="freeCreditsDisplay">3</strong> free downloads remaining</p>
-                        <button id="startFreeDownloadBtn" class="btn-primary" style="padding: 1rem 2rem; font-size: 1.125rem;">
-                            Start Downloading Songs
+                    <div class="free-tier-start" style="text-align: center; padding: 2rem; max-width: 600px; margin: 0 auto;">
+                        <h2 style="margin-bottom: 1rem; color: #1a202c;">Ready to Download Your Free Songs!</h2>
+                        <p style="color: #718096; margin-bottom: 1.5rem; font-size: 1.125rem;">
+                            You have <strong id="freeCreditsDisplay" style="color: #6366f1; font-size: 1.5rem;">3</strong> free downloads remaining
+                        </p>
+
+                        <div style="background: #f7fafc; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; text-align: left;">
+                            <h3 style="font-size: 1rem; font-weight: 600; color: #1a202c; margin-bottom: 0.75rem;">
+                                Before you start:
+                            </h3>
+                            <ol style="color: #4a5568; font-size: 0.875rem; padding-left: 1.5rem; line-height: 1.8;">
+                                <li>Make sure you're logged into <strong>SUNO.com</strong> in your Chrome browser</li>
+                                <li>Keep Chrome open during the download</li>
+                                <li>The download process will automatically access your SUNO songs</li>
+                            </ol>
+                        </div>
+
+                        <button id="startFreeDownloadBtn" class="btn-primary" style="padding: 1rem 2rem; font-size: 1.125rem; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; border: none; border-radius: 0.75rem; cursor: pointer; font-weight: 600; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);">
+                            Start Downloading My Songs
                         </button>
-                        <p style="margin-top: 1rem; font-size: 0.875rem; color: #718096;">
-                            Connect your SUNO account to download your songs
+
+                        <p style="margin-top: 1rem; font-size: 0.75rem; color: #a0aec0;">
+                            Using chrome_debug method - Your browser session will be used to download songs
                         </p>
                     </div>
                 `;
