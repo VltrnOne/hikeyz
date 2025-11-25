@@ -771,10 +771,10 @@
                     localStorage.setItem('free_credits', data.free_credits);
 
                     // Show success message
-                    alert(`Free session created! You have ${data.free_credits} free downloads.`);
+                    alert(`✅ Free session created! You have ${data.free_credits} free downloads. Redirecting to download page...`);
 
-                    // Redirect to login/download page (you'll need to create this)
-                    window.location.href = 'login.html?session_token=' + data.session_token;
+                    // Redirect to progress/download page
+                    window.location.href = 'progress.html?session_token=' + data.session_token;
                 } else {
                     // Handle error (e.g., IP already used today)
                     if (response.status === 429) {

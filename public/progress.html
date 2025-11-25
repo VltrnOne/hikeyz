@@ -538,12 +538,41 @@
         const jobId = urlParams.get('job_id');
         const sessionToken = urlParams.get('session_token');
 
+        // Check if this is a free tier user without a job (need to start download)
+        const isFreeTier = urlParams.get('free_tier') === 'true';
+        
         if (!jobId) {
-            document.getElementById('errorContainer').innerHTML = `
-                <div class="error-message">
-                    <strong>Error:</strong> No job ID provided. Please start a download from the main page.
-                </div>
-            `;
+            if (isFreeTier && sessionToken) {
+                // Show download start form for free tier users
+                document.getElementById('errorContainer').innerHTML = `
+                    <div class="free-tier-start" style="text-align: center; padding: 2rem;">
+                        <h2 style="margin-bottom: 1rem;">Start Your Free Download</h2>
+                        <p style="color: #718096; margin-bottom: 2rem;">You have <strong id="freeCreditsDisplay">3</strong> free downloads remaining</p>
+                        <button id="startFreeDownloadBtn" class="btn-primary" style="padding: 1rem 2rem; font-size: 1.125rem;">
+                            Start Downloading Songs
+                        </button>
+                        <p style="margin-top: 1rem; font-size: 0.875rem; color: #718096;">
+                            Connect your SUNO account to download your songs
+                        </p>
+                    </div>
+                `;
+                
+                // Setup start download button
+                document.getElementById('startFreeDownloadBtn').addEventListener('click', startFreeDownload);
+                
+                // Update credits display
+                checkFreeTierStatus().then(() => {
+                    const credits = localStorage.getItem('free_credits') || 3;
+                    const displayEl = document.getElementById('freeCreditsDisplay');
+                    if (displayEl) displayEl.textContent = credits;
+                });
+            } else {
+                document.getElementById('errorContainer').innerHTML = `
+                    <div class="error-message">
+                        <strong>Error:</strong> No job ID provided. Please start a download from the main page.
+                    </div>
+                `;
+            }
         }
 
         // Poll for job status updates
@@ -846,6 +875,49 @@
             }
         });
 
+        // Start download function for free tier
+        async function startFreeDownload() {
+            const btn = document.getElementById('startFreeDownloadBtn');
+            if (!btn) return;
+            
+            btn.disabled = true;
+            btn.textContent = 'Starting Download...';
+            
+            try {
+                // Get SUNO credentials (for now, using chrome_debug method)
+                const response = await fetch(`${API_BASE_URL}/api/start-download`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_token: sessionToken,
+                        suno_credentials: {
+                            method: 'chrome_debug',
+                            data: {}
+                        },
+                        requested_songs: null // Will use available credits
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.job_id) {
+                    // Redirect to progress page with job_id
+                    window.location.href = `progress.html?job_id=${data.job_id}&session_token=${sessionToken}`;
+                } else {
+                    alert('Error starting download: ' + (data.error || 'Please try again'));
+                    btn.disabled = false;
+                    btn.textContent = 'Start Downloading Songs';
+                }
+            } catch (error) {
+                console.error('Error starting download:', error);
+                alert('Network error. Please check your connection and try again.');
+                btn.disabled = false;
+                btn.textContent = 'Start Downloading Songs';
+            }
+        }
+        
         // Initialize free tier check
         if (sessionToken) {
             checkFreeTierStatus();
