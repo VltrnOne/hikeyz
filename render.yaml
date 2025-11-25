@@ -1,17 +1,13 @@
-# TEMPORARILY DISABLED - Re-enable after account upgrade
-# To disable: Rename this file to render.yaml.disabled
-# To re-enable: Rename back to render.yaml
-
-# services:
-#   - type: web
-#     name: hikeyz-api
-#     runtime: python
-#     region: oregon
-#     plan: starter
-#     branch: main
-#     buildCommand: pip install -r requirements.txt
-#     startCommand: gunicorn api.app:app
-#     envVars:
-#       - key: PYTHON_VERSION
-#         value: 3.11.0
-#     autoDeploy: false  # Disabled - manual deployments only
+services:
+  - type: web
+    name: hikeyz-api
+    runtime: python
+    region: oregon
+    plan: starter
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn api.app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    autoDeploy: false
