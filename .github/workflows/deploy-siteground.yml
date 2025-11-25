@@ -94,12 +94,12 @@ jobs:
 
           # Navigate to application directory (create if doesn't exist)
           echo "Checking application directory..."
-          if [ ! -d ~/hikeyz ]; then
-            echo "⚠️  Directory ~/hikeyz does not exist. Creating it..."
-            mkdir -p ~/hikeyz || { echo "❌ Failed to create directory"; exit 2; }
+          if [ ! -d ~/hitbot-agency ]; then
+            echo "⚠️  Directory ~/hitbot-agency does not exist. Creating it..."
+            mkdir -p ~/hitbot-agency || { echo "❌ Failed to create directory"; exit 2; }
           fi
 
-          cd ~/hikeyz || { echo "❌ Failed to change to directory"; exit 2; }
+          cd ~/hitbot-agency || { echo "❌ Failed to change to directory"; exit 2; }
 
           # Pull latest changes from GitHub
           echo "Pulling latest changes from GitHub..."
@@ -111,8 +111,8 @@ jobs:
           else
             echo "⚠️  Not a git repository, initializing..."
             git init || { echo "❌ Failed to initialize git"; exit 2; }
-            git remote add origin https://github.com/VltrnOne/hikeyz.git 2>&1 || \
-              git remote set-url origin https://github.com/VltrnOne/hikeyz.git 2>&1 || \
+            git remote add origin https://github.com/VltrnOne/hitbot-agency.git 2>&1 || \
+              git remote set-url origin https://github.com/VltrnOne/hitbot-agency.git 2>&1 || \
               echo "⚠️  Failed to set git remote, continuing..."
             git fetch origin 2>&1 || echo "⚠️  Initial fetch failed, continuing..."
             git reset --hard origin/main 2>&1 || echo "⚠️  Initial reset failed, continuing..."
@@ -121,9 +121,9 @@ jobs:
           # Update Python dependencies if requirements.txt changed
           echo "Checking for dependency updates..."
           if [ -f "requirements.txt" ]; then
-            if [ -f ~/virtualenv/hikeyz/bin/activate ]; then
+            if [ -f ~/virtualenv/hitbot-agency/bin/activate ]; then
               echo "Activating virtual environment..."
-              if source ~/virtualenv/hikeyz/bin/activate 2>&1; then
+              if source ~/virtualenv/hitbot-agency/bin/activate 2>&1; then
                 echo "Virtualenv activated successfully"
                 pip install --upgrade pip --quiet 2>&1 || echo "⚠️  Pip upgrade failed"
                 pip install -r requirements.txt --quiet 2>&1 || echo "⚠️  Dependency installation failed"
@@ -134,7 +134,7 @@ jobs:
                 pip3 install --user -r requirements.txt --quiet 2>&1 || echo "⚠️  Dependency installation failed"
               fi
             else
-              echo "⚠️  Virtualenv not found at ~/virtualenv/hikeyz/bin/activate"
+              echo "⚠️  Virtualenv not found at ~/virtualenv/hitbot-agency/bin/activate"
               echo "Trying to install dependencies without virtualenv..."
               pip3 install --user --upgrade pip --quiet 2>&1 || echo "⚠️  Pip upgrade failed"
               pip3 install --user -r requirements.txt --quiet 2>&1 || echo "⚠️  Dependency installation failed"
@@ -145,12 +145,12 @@ jobs:
 
           # Create necessary directories
           echo "Creating necessary directories..."
-          mkdir -p ~/hikeyz/downloads 2>&1 || echo "⚠️  Failed to create downloads directory"
-          mkdir -p ~/hikeyz/logs 2>&1 || echo "⚠️  Failed to create logs directory"
+          mkdir -p ~/hitbot-agency/downloads 2>&1 || echo "⚠️  Failed to create downloads directory"
+          mkdir -p ~/hitbot-agency/logs 2>&1 || echo "⚠️  Failed to create logs directory"
 
           # Copy frontend HTML files to web root
           echo "Deploying frontend files to public_html..."
-          if [ -d ~/hikeyz/public ]; then
+          if [ -d ~/hitbot-agency/public ]; then
             # Create backup of existing files
             if [ -d ~/public_html ] && [ "$(ls -A ~/public_html 2>/dev/null)" ]; then
               echo "Backing up existing public_html..."
@@ -163,7 +163,7 @@ jobs:
 
             # Copy all files from public/ to public_html/
             echo "Copying HTML, CSS, JS files..."
-            cp -r ~/hikeyz/public/* ~/public_html/ 2>&1 || echo "⚠️  Failed to copy frontend files"
+            cp -r ~/hitbot-agency/public/* ~/public_html/ 2>&1 || echo "⚠️  Failed to copy frontend files"
 
             # Set proper permissions
             chmod -R 755 ~/public_html 2>&1 || echo "⚠️  Failed to set permissions"
@@ -174,20 +174,20 @@ jobs:
             echo "Deployed files:"
             ls -lh ~/public_html/ 2>&1 || echo "⚠️  Failed to list files"
           else
-            echo "⚠️  WARNING: ~/hikeyz/public directory not found!"
+            echo "⚠️  WARNING: ~/hitbot-agency/public directory not found!"
           fi
 
           # Restart Python application (if using SiteGround Python App)
           # Note: SiteGround Python apps auto-restart on file changes
           # If you need manual restart, uncomment the line below:
-          # touch ~/hikeyz/api/app.py
+          # touch ~/hitbot-agency/api/app.py
 
           echo "==================================="
           echo "Deployment completed successfully!"
           echo "==================================="
           echo "Frontend deployed to: ~/public_html/"
           echo "Application should auto-restart"
-          echo "Check logs in: ~/hikeyz/logs/"
+          echo "Check logs in: ~/hitbot-agency/logs/"
           ENDSSH
 
           SSH_EXIT_CODE=$?
@@ -218,8 +218,8 @@ jobs:
               echo ""
               echo "To fix:"
               echo "1. Check the deployment logs above for the specific error"
-              echo "2. Verify the application directory exists: ~/hikeyz"
-              echo "3. Check virtualenv path: ~/virtualenv/hikeyz/bin/activate"
+              echo "2. Verify the application directory exists: ~/hitbot-agency"
+              echo "3. Check virtualenv path: ~/virtualenv/hitbot-agency/bin/activate"
               echo "4. Verify git repository is properly initialized"
               echo "5. Test commands manually via SSH"
             else
