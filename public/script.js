@@ -73,8 +73,8 @@ document.querySelectorAll('.pricing-card').forEach(card => {
     });
 });
 
-// API Configuration
-const API_BASE_URL = 'https://hikeyz-api.onrender.com';
+// API Configuration - Use global if available, otherwise default
+const API_BASE_URL = window.API_BASE_URL || 'https://hikeyz-api.onrender.com';
 
 // Package ID mapping (from database schema_credits.sql)
 const PACKAGE_IDS = {
@@ -85,7 +85,8 @@ const PACKAGE_IDS = {
 
 // Handle Stripe Checkout for Credit Packages
 const handleCreditPackagePurchase = async (packageName, event) => {
-    console.log('Purchase initiated for package:', packageName);
+    console.log('handleCreditPackagePurchase called for package:', packageName);
+    console.log('Event:', event);
 
     // Check if user is logged in
     const sessionToken = localStorage.getItem('session_token');
@@ -178,13 +179,20 @@ const handleTimeBasedPlan = async (plan, event) => {
     }
 };
 
-// Add click handlers to pricing buttons
-document.addEventListener('DOMContentLoaded', () => {
+// Function to setup pricing button handlers
+function setupPricingButtons() {
+    console.log('Setting up pricing button handlers...');
+    
     // Credit Package buttons (require login)
     const creditPackageButtons = document.querySelectorAll('[data-plan="starter"], [data-plan="popular"], [data-plan="premium"]');
-    creditPackageButtons.forEach(btn => {
+    console.log('Found credit package buttons:', creditPackageButtons.length);
+    
+    creditPackageButtons.forEach((btn, index) => {
+        console.log(`Attaching handler to button ${index + 1}:`, btn.getAttribute('data-plan'));
         btn.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
+            console.log('Credit package button clicked:', btn.getAttribute('data-plan'));
             const packageName = btn.getAttribute('data-plan');
             handleCreditPackagePurchase(packageName, e);
         });
@@ -192,9 +200,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Legacy time-based plan buttons
     const legacyButtons = document.querySelectorAll('[data-plan="quick"], [data-plan="pro"], [data-plan="day"]');
-    legacyButtons.forEach(btn => {
+    console.log('Found legacy plan buttons:', legacyButtons.length);
+    
+    legacyButtons.forEach((btn, index) => {
+        console.log(`Attaching handler to legacy button ${index + 1}:`, btn.getAttribute('data-plan'));
         btn.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
+            console.log('Legacy plan button clicked:', btn.getAttribute('data-plan'));
             const plan = btn.getAttribute('data-plan');
             handleTimeBasedPlan(plan, e);
         });
@@ -213,7 +226,36 @@ document.addEventListener('DOMContentLoaded', () => {
         // Verify payment and show success message
         verifyPaymentStatus(sessionId);
     }
-});
+    
+    // Fallback: Use event delegation for pricing buttons (in case initial setup failed)
+    document.body.addEventListener('click', (e) => {
+        const target = e.target.closest('[data-plan]');
+        if (target) {
+            const plan = target.getAttribute('data-plan');
+            console.log('Event delegation caught click on:', plan);
+            
+            if (['starter', 'popular', 'premium'].includes(plan)) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCreditPackagePurchase(plan, e);
+            } else if (['quick', 'pro', 'day'].includes(plan)) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleTimeBasedPlan(plan, e);
+            }
+        }
+    });
+    
+    console.log('Pricing button handlers setup complete');
+}
+
+// Add click handlers to pricing buttons
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupPricingButtons);
+} else {
+    // DOM is already ready, run immediately
+    setupPricingButtons();
+}
 
 // Verify payment status after returning from Stripe
 async function verifyPaymentStatus(stripeSessionId) {

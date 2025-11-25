@@ -738,10 +738,13 @@
         }
     </style>
 
+    <script>
+        // API Configuration - Define before script.js loads
+        window.API_BASE_URL = 'https://hikeyz-api.onrender.com';
+    </script>
     <script src="script.js"></script>
     <script>
-        // API Configuration
-        const API_BASE_URL = 'https://hikeyz-api.onrender.com';
+        // Additional inline scripts
 
         // Handle "Try Free" button click
         document.getElementById('tryFreeBtn').addEventListener('click', async function() {
