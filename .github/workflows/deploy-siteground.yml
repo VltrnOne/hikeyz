@@ -111,8 +111,8 @@ jobs:
           else
             echo "⚠️  Not a git repository, initializing..."
             git init || { echo "❌ Failed to initialize git"; exit 2; }
-            git remote add origin https://github.com/VltrnOne/hitbot-agency.git 2>&1 || \
-              git remote set-url origin https://github.com/VltrnOne/hitbot-agency.git 2>&1 || \
+            git remote add origin https://github.com/VltrnOne/hikeyz.git 2>&1 || \
+              git remote set-url origin https://github.com/VltrnOne/hikeyz.git 2>&1 || \
               echo "⚠️  Failed to set git remote, continuing..."
             git fetch origin 2>&1 || echo "⚠️  Initial fetch failed, continuing..."
             git reset --hard origin/main 2>&1 || echo "⚠️  Initial reset failed, continuing..."
