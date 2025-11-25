@@ -70,7 +70,7 @@ jobs:
         run: |
           echo "Attempting deployment to $SG_USER@$SG_HOST:$SG_PORT"
           echo "Using SSH key: ~/.ssh/siteground_key"
-          
+
           # Attempt SSH connection with detailed error output
           ssh -v -i ~/.ssh/siteground_key -p $SG_PORT \
             -o StrictHostKeyChecking=no \
@@ -78,77 +78,77 @@ jobs:
             -o BatchMode=yes \
             -o LogLevel=ERROR \
             $SG_USER@$SG_HOST << 'ENDSSH'
-echo "==================================="
-echo "Starting deployment..."
-echo "==================================="
+          echo "==================================="
+          echo "Starting deployment..."
+          echo "==================================="
 
-# Navigate to application directory (create if doesn't exist)
-echo "Checking application directory..."
-if [ ! -d ~/hikeyz ]; then
-  echo "⚠️  Directory ~/hikeyz does not exist. Creating it..."
-  mkdir -p ~/hikeyz || { echo "❌ Failed to create directory"; exit 2; }
-fi
+          # Navigate to application directory (create if doesn't exist)
+          echo "Checking application directory..."
+          if [ ! -d ~/hikeyz ]; then
+            echo "⚠️  Directory ~/hikeyz does not exist. Creating it..."
+            mkdir -p ~/hikeyz || { echo "❌ Failed to create directory"; exit 2; }
+          fi
 
-cd ~/hikeyz || { echo "❌ Failed to change to directory"; exit 2; }
+          cd ~/hikeyz || { echo "❌ Failed to change to directory"; exit 2; }
 
-# Pull latest changes from GitHub
-echo "Pulling latest changes from GitHub..."
-if [ -d .git ]; then
-  echo "Git repository found, updating..."
-  git fetch origin 2>&1 || echo "⚠️  Git fetch failed, continuing..."
-  git reset --hard origin/main 2>&1 || echo "⚠️  Git reset failed, continuing..."
-  git clean -fd 2>&1 || echo "⚠️  Git clean failed, continuing..."
-else
-  echo "⚠️  Not a git repository, initializing..."
-  git init || { echo "❌ Failed to initialize git"; exit 2; }
-  git remote add origin https://github.com/VltrnOne/hikeyz.git 2>&1 || \
-    git remote set-url origin https://github.com/VltrnOne/hikeyz.git 2>&1 || \
-    echo "⚠️  Failed to set git remote, continuing..."
-  git fetch origin 2>&1 || echo "⚠️  Initial fetch failed, continuing..."
-  git reset --hard origin/main 2>&1 || echo "⚠️  Initial reset failed, continuing..."
-fi
+          # Pull latest changes from GitHub
+          echo "Pulling latest changes from GitHub..."
+          if [ -d .git ]; then
+            echo "Git repository found, updating..."
+            git fetch origin 2>&1 || echo "⚠️  Git fetch failed, continuing..."
+            git reset --hard origin/main 2>&1 || echo "⚠️  Git reset failed, continuing..."
+            git clean -fd 2>&1 || echo "⚠️  Git clean failed, continuing..."
+          else
+            echo "⚠️  Not a git repository, initializing..."
+            git init || { echo "❌ Failed to initialize git"; exit 2; }
+            git remote add origin https://github.com/VltrnOne/hikeyz.git 2>&1 || \
+              git remote set-url origin https://github.com/VltrnOne/hikeyz.git 2>&1 || \
+              echo "⚠️  Failed to set git remote, continuing..."
+            git fetch origin 2>&1 || echo "⚠️  Initial fetch failed, continuing..."
+            git reset --hard origin/main 2>&1 || echo "⚠️  Initial reset failed, continuing..."
+          fi
 
-# Update Python dependencies if requirements.txt changed
-echo "Checking for dependency updates..."
-if [ -f "requirements.txt" ]; then
-  if [ -f ~/virtualenv/hikeyz/bin/activate ]; then
-    echo "Activating virtual environment..."
-    if source ~/virtualenv/hikeyz/bin/activate 2>&1; then
-      echo "Virtualenv activated successfully"
-      pip install --upgrade pip --quiet 2>&1 || echo "⚠️  Pip upgrade failed"
-      pip install -r requirements.txt --quiet 2>&1 || echo "⚠️  Dependency installation failed"
-      echo "Dependencies updated"
-    else
-      echo "⚠️  Virtualenv activation failed, trying without it..."
-      pip3 install --user --upgrade pip --quiet 2>&1 || echo "⚠️  Pip upgrade failed"
-      pip3 install --user -r requirements.txt --quiet 2>&1 || echo "⚠️  Dependency installation failed"
-    fi
-  else
-    echo "⚠️  Virtualenv not found at ~/virtualenv/hikeyz/bin/activate"
-    echo "Trying to install dependencies without virtualenv..."
-    pip3 install --user --upgrade pip --quiet 2>&1 || echo "⚠️  Pip upgrade failed"
-    pip3 install --user -r requirements.txt --quiet 2>&1 || echo "⚠️  Dependency installation failed"
-  fi
-else
-  echo "⚠️  requirements.txt not found, skipping dependency updates"
-fi
+          # Update Python dependencies if requirements.txt changed
+          echo "Checking for dependency updates..."
+          if [ -f "requirements.txt" ]; then
+            if [ -f ~/virtualenv/hikeyz/bin/activate ]; then
+              echo "Activating virtual environment..."
+              if source ~/virtualenv/hikeyz/bin/activate 2>&1; then
+                echo "Virtualenv activated successfully"
+                pip install --upgrade pip --quiet 2>&1 || echo "⚠️  Pip upgrade failed"
+                pip install -r requirements.txt --quiet 2>&1 || echo "⚠️  Dependency installation failed"
+                echo "Dependencies updated"
+              else
+                echo "⚠️  Virtualenv activation failed, trying without it..."
+                pip3 install --user --upgrade pip --quiet 2>&1 || echo "⚠️  Pip upgrade failed"
+                pip3 install --user -r requirements.txt --quiet 2>&1 || echo "⚠️  Dependency installation failed"
+              fi
+            else
+              echo "⚠️  Virtualenv not found at ~/virtualenv/hikeyz/bin/activate"
+              echo "Trying to install dependencies without virtualenv..."
+              pip3 install --user --upgrade pip --quiet 2>&1 || echo "⚠️  Pip upgrade failed"
+              pip3 install --user -r requirements.txt --quiet 2>&1 || echo "⚠️  Dependency installation failed"
+            fi
+          else
+            echo "⚠️  requirements.txt not found, skipping dependency updates"
+          fi
 
-# Create necessary directories
-echo "Creating necessary directories..."
-mkdir -p ~/hikeyz/downloads 2>&1 || echo "⚠️  Failed to create downloads directory"
-mkdir -p ~/hikeyz/logs 2>&1 || echo "⚠️  Failed to create logs directory"
+          # Create necessary directories
+          echo "Creating necessary directories..."
+          mkdir -p ~/hikeyz/downloads 2>&1 || echo "⚠️  Failed to create downloads directory"
+          mkdir -p ~/hikeyz/logs 2>&1 || echo "⚠️  Failed to create logs directory"
 
-# Restart Python application (if using SiteGround Python App)
-# Note: SiteGround Python apps auto-restart on file changes
-# If you need manual restart, uncomment the line below:
-# touch ~/hikeyz/api/app.py
+          # Restart Python application (if using SiteGround Python App)
+          # Note: SiteGround Python apps auto-restart on file changes
+          # If you need manual restart, uncomment the line below:
+          # touch ~/hikeyz/api/app.py
 
-echo "==================================="
-echo "Deployment completed successfully!"
-echo "==================================="
-echo "Application should auto-restart"
-echo "Check logs in: ~/hikeyz/logs/"
-ENDSSH
+          echo "==================================="
+          echo "Deployment completed successfully!"
+          echo "==================================="
+          echo "Application should auto-restart"
+          echo "Check logs in: ~/hikeyz/logs/"
+          ENDSSH
 
           SSH_EXIT_CODE=$?
           if [ $SSH_EXIT_CODE -ne 0 ]; then
