@@ -18,9 +18,49 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          
+          # Write SSH key with proper formatting (preserve newlines)
           echo "${{ secrets.SITEGROUND_SSH_KEY }}" > ~/.ssh/siteground_key
           chmod 600 ~/.ssh/siteground_key
-          ssh-keyscan -p ${{ secrets.SITEGROUND_SSH_PORT }} ${{ secrets.SITEGROUND_SSH_HOST }} >> ~/.ssh/known_hosts
+          
+          # Verify key file was created
+          if [ ! -f ~/.ssh/siteground_key ]; then
+            echo "❌ ERROR: SSH key file was not created"
+            exit 1
+          fi
+          
+          # Check key format
+          echo "Checking SSH key format..."
+          if grep -q "BEGIN.*PRIVATE KEY" ~/.ssh/siteground_key; then
+            echo "✅ SSH key format looks correct"
+          else
+            echo "⚠️  WARNING: SSH key may be missing BEGIN/END markers"
+          fi
+          
+          # Show key file info (first and last lines only for security)
+          echo "Key file info:"
+          head -1 ~/.ssh/siteground_key
+          echo "..."
+          tail -1 ~/.ssh/siteground_key
+          echo "Key file size: $(wc -l < ~/.ssh/siteground_key) lines"
+          
+          # Add host to known_hosts
+          ssh-keyscan -p ${{ secrets.SITEGROUND_SSH_PORT }} ${{ secrets.SITEGROUND_SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          chmod 644 ~/.ssh/known_hosts
+          
+          # Test SSH connection (non-blocking - just for info)
+          echo ""
+          echo "Testing SSH connection..."
+          if ssh -i ~/.ssh/siteground_key -p ${{ secrets.SITEGROUND_SSH_PORT }} -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o BatchMode=yes ${{ secrets.SITEGROUND_SSH_USER }}@${{ secrets.SITEGROUND_SSH_HOST }} "echo 'SSH connection successful'" 2>&1; then
+            echo "✅ SSH connection test passed"
+          else
+            echo "⚠️  SSH connection test failed - this may be normal if key needs authorization"
+            echo "   Please verify:"
+            echo "   1. SSH key is authorized in SiteGround cPanel → SSH Keys Manager"
+            echo "   2. GitHub secret contains the complete private key (all lines)"
+            echo "   3. Key has no passphrase"
+          fi
       
       - name: Deploy to SiteGround
         env:
@@ -28,7 +68,31 @@ jobs:
           SG_USER: ${{ secrets.SITEGROUND_SSH_USER }}
           SG_PORT: ${{ secrets.SITEGROUND_SSH_PORT }}
         run: |
-          ssh -i ~/.ssh/siteground_key -p $SG_PORT -o StrictHostKeyChecking=no $SG_USER@$SG_HOST << 'ENDSSH'
+          echo "Attempting deployment to $SG_USER@$SG_HOST:$SG_PORT"
+          echo "Using SSH key: ~/.ssh/siteground_key"
+          
+          # Attempt SSH connection with detailed error output
+          ssh -v -i ~/.ssh/siteground_key -p $SG_PORT \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=30 \
+            -o BatchMode=yes \
+            -o LogLevel=ERROR \
+            $SG_USER@$SG_HOST << 'ENDSSH' || {
+              echo ""
+              echo "❌ DEPLOYMENT FAILED: SSH Authentication Error"
+              echo ""
+              echo "Common causes:"
+              echo "1. SSH key not authorized in SiteGround cPanel"
+              echo "2. SSH key secret missing or incomplete in GitHub"
+              echo "3. Wrong SSH credentials in secrets"
+              echo ""
+              echo "To fix:"
+              echo "1. Verify SSH key is authorized: SiteGround cPanel → SSH Keys Manager → Authorize"
+              echo "2. Update GitHub secret SITEGROUND_SSH_KEY with complete private key"
+              echo "3. Check all 4 secrets are set correctly"
+              echo ""
+              exit 1
+            }
             set -e
             echo "==================================="
             echo "Starting deployment..."
