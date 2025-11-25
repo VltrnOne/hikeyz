@@ -7,6 +7,9 @@
 config/secrets.json
 *.key
 *.pem
+sg_key*
+*_key
+*_key.pem
 
 # User data and downloads
 downloads/

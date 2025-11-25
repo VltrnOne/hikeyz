@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SUNO Downloader Pro - Export All Your SUNO Songs in Minutes</title>
-    <meta name="description" content="Automatically download all your SUNO AI songs in bulk. Choose $4.99 for 10 minutes or $49.99 for 3 days unlimited access.">
+    <meta name="description" content="Automatically download all your SUNO AI songs in bulk. Credit-based prepaid accounts with bonus offers. Start with 3 free downloads or purchase credit packages starting at $25.">
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3823807211662943"
+            crossorigin="anonymous"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -39,7 +43,7 @@
                 <div class="badge">Automated Bulk Downloads</div>
                 <h1>Export All Your SUNO Songs<br>in <span class="gradient-text">Minutes, Not Hours</span></h1>
                 <p class="hero-description">
-                    Stop manually downloading your SUNO creations one by one. Our automated system downloads all 340+ songs while you relax. Secure, fast, and reliable.
+                    Stop manually downloading your SUNO creations one by one. Our automated system downloads all your songs based on your available credits. Secure, fast, and reliable.
                 </p>
                 <div class="hero-cta">
                     <a href="#pricing" class="btn-primary">Start Downloading Now</a>
@@ -78,7 +82,7 @@
                         </svg>
                     </div>
                     <h3>Lightning Fast</h3>
-                    <p>Download 340+ songs in under 10 minutes with our optimized automation engine</p>
+                    <p>Download unlimited songs based on your credits with our optimized automation engine</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
@@ -143,21 +147,34 @@
                 <p>Choose the plan that works for you</p>
             </div>
             <div class="pricing-grid">
-                <div class="pricing-card">
+                <!-- Free Tier Card -->
+                <div class="pricing-card free-tier">
                     <div class="pricing-header">
-                        <h3>Quick Download</h3>
+                        <h3>Free Tier</h3>
                         <div class="price">
                             <span class="currency">$</span>
-                            <span class="amount">4.99</span>
+                            <span class="amount">0</span>
                         </div>
-                        <p class="billing">10 Minutes Access</p>
+                        <p class="billing">Try Before You Buy</p>
                     </div>
                     <ul class="features-list">
                         <li>
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            Download up to 500 songs
+                            3 free song downloads
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            +1 download per 45-second ad
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            24-hour browser session
                         </li>
                         <li>
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -169,69 +186,246 @@
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            Organized file naming
-                        </li>
-                        <li>
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            Real-time progress tracking
-                        </li>
-                        <li>
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            ZIP file delivery
+                            No credit card required
                         </li>
                     </ul>
-                    <a href="#signup" class="btn-outline-card" data-plan="quick">Get Started</a>
-                    <p class="pricing-note">Perfect for one-time bulk exports</p>
+                    <button class="btn-outline-card" id="tryFreeBtn">Try Free</button>
+                    <p class="pricing-note">Perfect for testing the service</p>
                 </div>
 
-                <div class="pricing-card featured">
-                    <div class="badge-featured">MOST POPULAR</div>
+                <!-- 1 Hour Unlimited Pass -->
+                <div class="pricing-card">
                     <div class="pricing-header">
-                        <h3>Pro Access</h3>
+                        <h3>Quick Pass</h3>
                         <div class="price">
                             <span class="currency">$</span>
-                            <span class="amount">49.99</span>
+                            <span class="amount">4.99</span>
                         </div>
-                        <p class="billing">3 Days Unlimited</p>
+                        <p class="billing">1 Hour Unlimited</p>
                     </div>
                     <ul class="features-list">
                         <li>
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            Unlimited downloads for 72 hours
+                            Unlimited downloads for 1 hour
                         </li>
                         <li>
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            Priority download queue
+                            No account required
                         </li>
                         <li>
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            All Quick Download features
+                            Browser session only
                         </li>
                         <li>
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            Email support
+                            Full quality MP3 files
                         </li>
                         <li>
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            Extended file storage
+                            Instant access
                         </li>
                     </ul>
-                    <a href="#signup" class="btn-primary-card" data-plan="pro">Get Started</a>
-                    <p class="pricing-note">Best for prolific creators</p>
+                    <a href="#signup" class="btn-outline-card" data-plan="quick">Get Started</a>
+                    <p class="pricing-note">Perfect for one-time bulk export</p>
+                </div>
+
+                <!-- 24 Hour Unlimited Pass -->
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Day Pass</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">24.99</span>
+                        </div>
+                        <p class="billing">24 Hours Unlimited</p>
+                    </div>
+                    <ul class="features-list">
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Unlimited downloads for 24 hours
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            No account required
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Browser session only
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Full quality MP3 files
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Multiple download sessions
+                        </li>
+                    </ul>
+                    <a href="#signup" class="btn-outline-card" data-plan="day">Get Started</a>
+                    <p class="pricing-note">Best for active creators</p>
+                </div>
+
+                <!-- Starter Pack -->
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Starter Pack</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">25</span>
+                        </div>
+                        <div class="bonus-badge">+15 9-Keyz</div>
+                        <p class="billing">40 9-Keyz Total</p>
+                    </div>
+                    <ul class="features-list">
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            ~114 song downloads
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            9-Keyz credits
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            60% bonus credits
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Credits never expire
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Account required
+                        </li>
+                    </ul>
+                    <a href="#signup" class="btn-outline-card" data-plan="starter">Get Started</a>
+                    <p class="pricing-note">Perfect for casual users</p>
+                </div>
+
+                <!-- Popular Pack -->
+                <div class="pricing-card featured">
+                    <div class="badge-featured">MOST POPULAR</div>
+                    <div class="pricing-header">
+                        <h3>Popular Pack</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">50</span>
+                        </div>
+                        <div class="bonus-badge">+25 9-Keyz</div>
+                        <p class="billing">75 9-Keyz Total</p>
+                    </div>
+                    <ul class="features-list">
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            ~214 song downloads
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            9-Keyz credits
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            50% bonus credits
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Credits never expire
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Priority support
+                        </li>
+                    </ul>
+                    <a href="#signup" class="btn-primary-card" data-plan="popular">Get Started</a>
+                    <p class="pricing-note">Best for regular creators</p>
+                </div>
+
+                <!-- Premium Pack -->
+                <div class="pricing-card premium">
+                    <div class="badge-premium">BEST VALUE</div>
+                    <div class="pricing-header">
+                        <h3>Premium Pack</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">100</span>
+                        </div>
+                        <div class="bonus-badge">+100 9-Keyz</div>
+                        <p class="billing">200 9-Keyz Total</p>
+                    </div>
+                    <ul class="features-list">
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            ~571 song downloads
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            9-Keyz credits
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            100% bonus credits
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Credits never expire
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16.6667 5L7.50004 14.1667L3.33337 10" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Premium support
+                        </li>
+                    </ul>
+                    <a href="#signup" class="btn-primary-card" data-plan="premium">Get Started</a>
+                    <p class="pricing-note">Best for power users</p>
                 </div>
             </div>
         </div>
@@ -247,8 +441,8 @@
             <div class="steps-grid">
                 <div class="step">
                     <div class="step-number">1</div>
-                    <h3>Choose Your Plan</h3>
-                    <p>Select Quick Download for one-time use or Pro Access for unlimited downloads over 3 days</p>
+                    <h3>Purchase Credits</h3>
+                    <p>Choose a credit package with bonus offers. Credits never expire and are based on your download needs</p>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
@@ -318,5 +512,59 @@
     </footer>
 
     <script src="script.js"></script>
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'https://hikeyz-api.onrender.com';
+
+        // Handle "Try Free" button click
+        document.getElementById('tryFreeBtn').addEventListener('click', async function() {
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = 'Creating Free Session...';
+
+            try {
+                // Create free session
+                const response = await fetch(`${API_BASE_URL}/api/session/free`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store session token
+                    localStorage.setItem('session_token', data.session_token);
+                    localStorage.setItem('plan_type', 'free');
+                    localStorage.setItem('free_credits', data.free_credits);
+
+                    // Show success message
+                    alert(`Free session created! You have ${data.free_credits} free downloads.`);
+
+                    // Redirect to login/download page (you'll need to create this)
+                    window.location.href = 'login.html?session_token=' + data.session_token;
+                } else {
+                    // Handle error (e.g., IP already used today)
+                    if (response.status === 429) {
+                        alert('You already have an active free session. Please try again in 24 hours or upgrade to a paid plan.');
+                    } else {
+                        alert('Error creating free session: ' + (data.error || 'Please try again'));
+                    }
+                    btn.disabled = false;
+                    btn.textContent = 'Try Free';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Network error. Please check your connection and try again.');
+                btn.disabled = false;
+                btn.textContent = 'Try Free';
+            }
+        });
+
+        // Initialize AdSense
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
 </body>
 </html>

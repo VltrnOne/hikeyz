@@ -1,0 +1,81 @@
+name: Deploy to SiteGround
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  deploy:
+    name: Deploy to SiteGround
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SITEGROUND_SSH_KEY }}" > ~/.ssh/siteground_key
+          chmod 600 ~/.ssh/siteground_key
+          ssh-keyscan -p ${{ secrets.SITEGROUND_SSH_PORT }} ${{ secrets.SITEGROUND_SSH_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Deploy to SiteGround
+        env:
+          SG_HOST: ${{ secrets.SITEGROUND_SSH_HOST }}
+          SG_USER: ${{ secrets.SITEGROUND_SSH_USER }}
+          SG_PORT: ${{ secrets.SITEGROUND_SSH_PORT }}
+        run: |
+          ssh -i ~/.ssh/siteground_key -p $SG_PORT -o StrictHostKeyChecking=no $SG_USER@$SG_HOST << 'ENDSSH'
+            set -e
+            echo "==================================="
+            echo "Starting deployment..."
+            echo "==================================="
+            
+            # Navigate to application directory
+            cd ~/hikeyz
+            
+            # Pull latest changes from GitHub
+            echo "Pulling latest changes from GitHub..."
+            git fetch origin
+            git reset --hard origin/main
+            git clean -fd
+            
+            # Update Python dependencies if requirements.txt changed
+            echo "Checking for dependency updates..."
+            if [ -f "requirements.txt" ]; then
+              source ~/virtualenv/hikeyz/bin/activate
+              pip install --upgrade pip --quiet
+              pip install -r requirements.txt --quiet
+              echo "Dependencies updated"
+            fi
+            
+            # Create necessary directories
+            mkdir -p ~/hikeyz/downloads
+            mkdir -p ~/hikeyz/logs
+            
+            # Restart Python application (if using SiteGround Python App)
+            # Note: SiteGround Python apps auto-restart on file changes
+            # If you need manual restart, uncomment the line below:
+            # touch ~/hikeyz/api/app.py
+            
+            echo "==================================="
+            echo "Deployment completed successfully!"
+            echo "==================================="
+            echo "Application should auto-restart"
+            echo "Check logs in: ~/hikeyz/logs/"
+          ENDSSH
+      
+      - name: Cleanup SSH key
+        if: always()
+        run: |
+          rm -f ~/.ssh/siteground_key
+      
+      - name: Deployment Summary
+        run: |
+          echo "✅ Deployment completed!"
+          echo "Changes pushed to SiteGround server"
+          echo "Application should be live shortly"
+

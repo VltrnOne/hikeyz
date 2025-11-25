@@ -11,23 +11,27 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Sessions table (paid access sessions)
+-- Sessions table (free and paid access sessions)
 CREATE TABLE IF NOT EXISTS sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     session_token VARCHAR(64) UNIQUE NOT NULL,
-    stripe_session_id VARCHAR(255) UNIQUE,
-    client_reference_id VARCHAR(255),
-    plan_type ENUM('quick', 'pro') NOT NULL,
+    stripe_session_id VARCHAR(255) UNIQUE NULL,
+    client_reference_id VARCHAR(255) NULL,
+    plan_type ENUM('free', 'quick', 'pro') NOT NULL,
     plan_name VARCHAR(100),
     user_id INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL,
     max_songs INT NULL,
     songs_downloaded INT DEFAULT 0,
+    free_credits INT DEFAULT 0,  -- For free tier: 3 initial + 1 per ad
+    ads_watched INT DEFAULT 0,   -- Track ad views for free users
     status ENUM('active', 'expired', 'cancelled') DEFAULT 'active',
+    ip_address VARCHAR(45) NULL,  -- Track IP to prevent abuse
     INDEX idx_session_token (session_token),
     INDEX idx_stripe_session (stripe_session_id),
     INDEX idx_expires_at (expires_at),
+    INDEX idx_plan_type (plan_type),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -117,6 +121,25 @@ CREATE TABLE IF NOT EXISTS ad_revenue (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_date (date),
     INDEX idx_session (session_token)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Ad views table (track individual ad completions for free credit system)
+CREATE TABLE IF NOT EXISTS ad_views (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    session_token VARCHAR(64) NOT NULL,
+    ad_id VARCHAR(100) NOT NULL,  -- Unique ID for this ad view
+    ad_network ENUM('google_adsense', 'youtube_player', 'custom') DEFAULT 'google_adsense',
+    required_duration INT DEFAULT 45,  -- Required watch time in seconds
+    actual_duration INT DEFAULT 0,     -- Actual time watched
+    completed BOOLEAN DEFAULT FALSE,   -- Whether user watched full duration
+    credit_granted BOOLEAN DEFAULT FALSE,  -- Whether credit was awarded
+    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    INDEX idx_session (session_token),
+    INDEX idx_completed (completed),
+    INDEX idx_started_at (started_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Cleanup expired sessions (run as cron job)

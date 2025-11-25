@@ -223,9 +223,157 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Free Credits Banner Styles */
+        .free-credits-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 1.5rem;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+        }
+
+        .credits-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .credits-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .credits-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .credits-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .credits-count {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .btn-watch-ad {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-watch-ad:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Ad Player Modal Styles */
+        .ad-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .ad-modal.active {
+            display: flex;
+        }
+
+        .ad-modal-content {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 800px;
+            width: 90%;
+            position: relative;
+        }
+
+        .ad-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .ad-modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .ad-timer {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ad-player-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 1rem;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .ad-player-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .ad-skip-message {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .ad-complete-button {
+            display: none;
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1.125rem;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .ad-complete-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
     </style>
     <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_ADSENSE_ID"
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3823807211662943"
             crossorigin="anonymous"></script>
 </head>
 <body>
@@ -246,6 +394,31 @@
 
     <!-- Progress Section -->
     <div class="progress-container">
+        <!-- Free Credits Banner (shown only for free tier) -->
+        <div class="free-credits-banner" id="freeCreditsBanner" style="display: none;">
+            <div class="credits-info">
+                <div class="credits-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="credits-text">
+                    <span class="credits-label">Free Downloads Remaining:</span>
+                    <span class="credits-count" id="creditsCount">3</span>
+                </div>
+            </div>
+            <button class="btn-watch-ad" id="watchAdBtn">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 2L6 7H2V13H6L10 18V2Z" fill="currentColor"/>
+                    <path d="M14 7C15.1046 8.10457 15.1046 9.89543 14 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M16.5 4.5C18.433 6.433 18.433 9.567 16.5 11.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Watch 45s Ad for +1 Download
+            </button>
+        </div>
+
         <div class="progress-card">
             <div class="status-badge processing" id="statusBadge">
                 <div class="status-icon"></div>
@@ -308,6 +481,36 @@
                     <div class="session-info-label">Estimated Completion</div>
                     <div class="session-info-value" id="estimatedTime">Calculating...</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Ad Player Modal -->
+        <div class="ad-modal" id="adModal">
+            <div class="ad-modal-content">
+                <div class="ad-modal-header">
+                    <h3 class="ad-modal-title">Watch Ad to Earn Free Download</h3>
+                    <div class="ad-timer">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span id="adTimer">45s</span>
+                    </div>
+                </div>
+                <div class="ad-player-container" id="adPlayerContainer">
+                    <!-- Google AdSense ad will be displayed here -->
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-3823807211662943"
+                         data-ad-slot="YOUR_AD_SLOT_ID"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
+                    <script>
+                         (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
+                <p class="ad-skip-message">Please watch the entire ad (45 seconds) to earn your free download credit</p>
+                <button class="ad-complete-button" id="adCompleteBtn">Claim Your Free Download</button>
             </div>
         </div>
 
@@ -455,6 +658,198 @@
                 })
             });
         }, 1000);
+
+        // ========================================
+        // FREE TIER FUNCTIONALITY
+        // ========================================
+
+        let currentAdId = null;
+        let adStartTime = null;
+        let timerInterval = null;
+
+        // Check if user is on free tier and show banner
+        async function checkFreeTierStatus() {
+            if (!sessionToken) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/validate-session`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_token: sessionToken })
+                });
+
+                const data = await response.json();
+
+                if (data.valid && data.session.plan_type === 'free') {
+                    // Show free credits banner
+                    document.getElementById('freeCreditsBanner').style.display = 'flex';
+
+                    // Update credits count
+                    const creditsCount = data.session.free_credits || 0;
+                    document.getElementById('creditsCount').textContent = creditsCount;
+
+                    // Setup watch ad button
+                    document.getElementById('watchAdBtn').addEventListener('click', startAdView);
+                }
+            } catch (error) {
+                console.error('Error checking free tier status:', error);
+            }
+        }
+
+        // Start ad view
+        async function startAdView() {
+            const btn = document.getElementById('watchAdBtn');
+            btn.disabled = true;
+            btn.textContent = 'Loading Ad...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/ad/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_token: sessionToken,
+                        ad_network: 'google_adsense'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentAdId = data.ad_id;
+                    adStartTime = Date.now();
+
+                    // Show ad modal
+                    const modal = document.getElementById('adModal');
+                    modal.classList.add('active');
+
+                    // Load Google AdSense ad
+                    const playerContainer = document.getElementById('adPlayerContainer');
+                    
+                    // Clear any existing content
+                    // NOTE: Replace YOUR_AD_SLOT_ID with your actual Google AdSense ad slot ID
+                    // You can create ad units in your AdSense dashboard
+                    playerContainer.innerHTML = `
+                        <div style="width:100%; min-height:400px; display:flex; align-items:center; justify-content:center; background:#f5f5f5;">
+                            <ins class="adsbygoogle"
+                                 style="display:block; width:100%; height:100%; min-height:400px;"
+                                 data-ad-client="ca-pub-3823807211662943"
+                                 data-ad-slot="YOUR_AD_SLOT_ID"
+                                 data-ad-format="auto"
+                                 data-full-width-responsive="true"></ins>
+                        </div>
+                    `;
+                    
+                    // Push ad to AdSense
+                    try {
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    } catch (e) {
+                        console.error('Error loading AdSense ad:', e);
+                        // Fallback: Show message if AdSense fails
+                        playerContainer.innerHTML = `
+                            <div style="padding: 2rem; text-align: center; color: #666;">
+                                <p>Ad is loading... Please wait for the ad to fully load before starting the timer.</p>
+                                <p style="font-size: 0.875rem; margin-top: 1rem;">If the ad doesn't appear, please refresh the page.</p>
+                                <p style="font-size: 0.75rem; margin-top: 0.5rem; color: #999;">Note: Make sure YOUR_AD_SLOT_ID is configured in the code.</p>
+                            </div>
+                        `;
+                    }
+
+                    // Start countdown timer (45 seconds)
+                    startAdTimer(45);
+                    
+                    // Re-enable button
+                    btn.disabled = false;
+                    btn.textContent = 'Watch 45s Ad for +1 Download';
+                } else {
+                    alert('Error loading ad: ' + (data.error || 'Please try again'));
+                    btn.disabled = false;
+                    btn.textContent = 'Watch 45s Ad for +1 Download';
+                }
+            } catch (error) {
+                console.error('Error starting ad:', error);
+                alert('Network error. Please check your connection.');
+                btn.disabled = false;
+                btn.textContent = 'Watch 45s Ad for +1 Download';
+            }
+        }
+
+        // Countdown timer
+        function startAdTimer(seconds) {
+            let remainingSeconds = seconds;
+            const timerElement = document.getElementById('adTimer');
+            const completeBtn = document.getElementById('adCompleteBtn');
+
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                timerElement.textContent = remainingSeconds + 's';
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    // Show complete button
+                    completeBtn.style.display = 'block';
+                    timerElement.textContent = 'Complete!';
+                }
+            }, 1000);
+        }
+
+        // Complete ad and claim credit
+        document.getElementById('adCompleteBtn').addEventListener('click', async function() {
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = 'Claiming Credit...';
+
+            const actualDuration = Math.floor((Date.now() - adStartTime) / 1000);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/ad/complete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_token: sessionToken,
+                        ad_id: currentAdId,
+                        actual_duration: actualDuration
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Update credits display
+                    document.getElementById('creditsCount').textContent = data.free_credits;
+
+                    // Close modal
+                    document.getElementById('adModal').classList.remove('active');
+
+                    // Reset button
+                    const watchAdBtn = document.getElementById('watchAdBtn');
+                    watchAdBtn.disabled = false;
+                    watchAdBtn.textContent = 'Watch 45s Ad for +1 Download';
+
+                    // Show success message
+                    alert(`Success! You earned 1 free download. You now have ${data.free_credits} credits.`);
+
+                    // Reset ad player
+                    document.getElementById('adPlayerContainer').innerHTML = '';
+                    btn.style.display = 'none';
+                    btn.disabled = false;
+                    btn.textContent = 'Claim Your Free Download';
+                } else {
+                    alert('Error claiming credit: ' + (data.error || 'Please watch the full ad'));
+                    btn.disabled = false;
+                    btn.textContent = 'Claim Your Free Download';
+                }
+            } catch (error) {
+                console.error('Error completing ad:', error);
+                alert('Network error. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Claim Your Free Download';
+            }
+        });
+
+        // Initialize free tier check
+        if (sessionToken) {
+            checkFreeTierStatus();
+        }
     </script>
 </body>
 </html>
