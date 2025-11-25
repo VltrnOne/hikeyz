@@ -10,8 +10,20 @@ jobs:
   deploy:
     name: Deploy to SiteGround
     runs-on: ubuntu-latest
+    # Check if deployments are enabled (default: enabled if secret not set)
+    if: ${{ secrets.DEPLOYMENT_ENABLED != 'false' }}
     
     steps:
+      - name: Check deployment status
+        run: |
+          if [ "${{ secrets.DEPLOYMENT_ENABLED }}" = "false" ]; then
+            echo "⚠️  Deployments are currently DISABLED"
+            echo "To enable: Set GitHub secret DEPLOYMENT_ENABLED to 'true' or remove it"
+            exit 1
+          else
+            echo "✅ Deployments are ENABLED"
+          fi
+      
       - name: Checkout code
         uses: actions/checkout@v3
       
