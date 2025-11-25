@@ -92,13 +92,18 @@ const handleCreditPackagePurchase = async (packageName, event) => {
     const sessionToken = localStorage.getItem('session_token');
     if (!sessionToken) {
         // User needs to login/register first
-        alert('Please login or create an account to purchase credit packages.');
+        console.log('User not logged in, opening auth modal...');
         // Open auth modal if it exists
-        if (typeof openAuthModal === 'function') {
-            openAuthModal();
+        if (typeof window.openAuthModal === 'function') {
+            window.openAuthModal();
         } else {
-            // Redirect to login page or show login modal
-            window.location.href = '#signup';
+            console.error('openAuthModal function not found');
+            alert('Please login or create an account to purchase credit packages.');
+            // Try to scroll to signup section as fallback
+            const signupSection = document.getElementById('signup') || document.querySelector('#pricing');
+            if (signupSection) {
+                signupSection.scrollIntoView({ behavior: 'smooth' });
+            }
         }
         return;
     }
@@ -138,13 +143,13 @@ const handleCreditPackagePurchase = async (packageName, event) => {
             if (response.status === 401) {
                 alert('Your session has expired. Please login again.');
                 localStorage.removeItem('session_token');
-                if (typeof openAuthModal === 'function') {
-                    openAuthModal();
+                if (typeof window.openAuthModal === 'function') {
+                    window.openAuthModal();
                 }
             } else if (response.status === 403) {
                 alert('Please login with a registered account to purchase credit packages.');
-                if (typeof openAuthModal === 'function') {
-                    openAuthModal();
+                if (typeof window.openAuthModal === 'function') {
+                    window.openAuthModal();
                 }
             } else {
                 throw new Error(data.error || 'Failed to create checkout session');
@@ -174,8 +179,14 @@ const handleTimeBasedPlan = async (plan, event) => {
     console.log('Legacy plan purchase:', plan);
     // For now, show message that these plans are being phased out
     alert('Time-based plans are being phased out. Please create an account to purchase credit packages that never expire!');
-    if (typeof openAuthModal === 'function') {
-        openAuthModal();
+    if (typeof window.openAuthModal === 'function') {
+        window.openAuthModal();
+    } else {
+        // Fallback: scroll to pricing section
+        const pricingSection = document.getElementById('pricing');
+        if (pricingSection) {
+            pricingSection.scrollIntoView({ behavior: 'smooth' });
+        }
     }
 };
 
@@ -187,15 +198,24 @@ function setupPricingButtons() {
     const creditPackageButtons = document.querySelectorAll('[data-plan="starter"], [data-plan="popular"], [data-plan="premium"]');
     console.log('Found credit package buttons:', creditPackageButtons.length);
     
+    if (creditPackageButtons.length === 0) {
+        console.warn('⚠️ No credit package buttons found! Checking all data-plan elements...');
+        const allPlanButtons = document.querySelectorAll('[data-plan]');
+        console.log('All buttons with data-plan:', allPlanButtons.length);
+        allPlanButtons.forEach((btn, idx) => {
+            console.log(`Button ${idx + 1}:`, btn.tagName, btn.className, 'Plan:', btn.getAttribute('data-plan'));
+        });
+    }
+    
     creditPackageButtons.forEach((btn, index) => {
-        console.log(`Attaching handler to button ${index + 1}:`, btn.getAttribute('data-plan'));
+        console.log(`Attaching handler to button ${index + 1}:`, btn.getAttribute('data-plan'), btn);
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Credit package button clicked:', btn.getAttribute('data-plan'));
+            console.log('✅ Credit package button clicked:', btn.getAttribute('data-plan'));
             const packageName = btn.getAttribute('data-plan');
             handleCreditPackagePurchase(packageName, e);
-        });
+        }, { capture: true }); // Use capture phase
     });
 
     // Legacy time-based plan buttons
@@ -228,23 +248,29 @@ function setupPricingButtons() {
     }
     
     // Fallback: Use event delegation for pricing buttons (in case initial setup failed)
-    document.body.addEventListener('click', (e) => {
-        const target = e.target.closest('[data-plan]');
-        if (target) {
-            const plan = target.getAttribute('data-plan');
-            console.log('Event delegation caught click on:', plan);
-            
-            if (['starter', 'popular', 'premium'].includes(plan)) {
-                e.preventDefault();
-                e.stopPropagation();
-                handleCreditPackagePurchase(plan, e);
-            } else if (['quick', 'pro', 'day'].includes(plan)) {
-                e.preventDefault();
-                e.stopPropagation();
-                handleTimeBasedPlan(plan, e);
+    // Only add if not already added
+    if (!document.body.hasAttribute('data-pricing-delegation-added')) {
+        document.body.setAttribute('data-pricing-delegation-added', 'true');
+        document.body.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-plan]');
+            if (target) {
+                const plan = target.getAttribute('data-plan');
+                console.log('Event delegation caught click on:', plan, target);
+                
+                if (['starter', 'popular', 'premium'].includes(plan)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Handling credit package purchase via delegation');
+                    handleCreditPackagePurchase(plan, e);
+                } else if (['quick', 'pro', 'day'].includes(plan)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Handling legacy plan via delegation');
+                    handleTimeBasedPlan(plan, e);
+                }
             }
-        }
-    });
+        }, true); // Use capture phase to catch earlier
+    }
     
     console.log('Pricing button handlers setup complete');
 }

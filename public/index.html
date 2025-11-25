@@ -798,11 +798,24 @@
 
         // ===== Authentication Functions =====
 
-        // Open auth modal (default to login)
-        function openAuthModal() {
-            document.getElementById('authModal').style.display = 'block';
-            showLoginTab();
-        }
+        // Open auth modal (default to login) - Make globally accessible
+        window.openAuthModal = function() {
+            console.log('openAuthModal called');
+            const modal = document.getElementById('authModal');
+            if (modal) {
+                console.log('Auth modal found, displaying...');
+                modal.style.display = 'block';
+                modal.style.zIndex = '10000';
+                showLoginTab();
+                console.log('✅ Auth modal displayed');
+            } else {
+                console.error('❌ Auth modal not found!');
+                alert('Please login or create an account to purchase credit packages.');
+            }
+        };
+        
+        // Make sure it's available immediately
+        console.log('openAuthModal function defined:', typeof window.openAuthModal);
 
         // Close auth modal
         function closeAuthModal() {
