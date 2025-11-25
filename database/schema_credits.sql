@@ -176,7 +176,7 @@ ALTER TABLE e9th_deposits ADD INDEX idx_user_status (user_id, status);
 
 DELIMITER //
 
--- Procedure to deduct credits for downloads
+-- Procedure to deduct credits for downloads AND collect e9th tokens
 CREATE PROCEDURE deduct_credits(
     IN p_user_id INT,
     IN p_job_id VARCHAR(100),
@@ -189,6 +189,9 @@ BEGIN
     DECLARE v_total_cost DECIMAL(10, 2);
     DECLARE v_current_balance DECIMAL(10, 2);
     DECLARE v_new_balance DECIMAL(10, 2);
+    DECLARE v_e9th_tokens_collected DECIMAL(18, 8);
+    DECLARE v_transaction_id INT;
+    DECLARE v_user_paid_with_e9th BOOLEAN DEFAULT FALSE;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -236,6 +239,35 @@ BEGIN
             p_user_id, 'deduction', -v_total_cost, v_new_balance,
             p_job_id, p_songs_count
         );
+
+        -- Get the transaction ID
+        SET v_transaction_id = LAST_INSERT_ID();
+
+        -- Check if user originally paid with e9th tokens
+        -- (Check if user has any e9th deposits that haven't been fully used)
+        SELECT COUNT(*) > 0 INTO v_user_paid_with_e9th
+        FROM e9th_deposits
+        WHERE user_id = p_user_id 
+        AND status = 'confirmed'
+        AND utility_tokens_issued > 0;
+
+        -- If user paid with e9th tokens, collect equivalent e9th tokens
+        -- 1 credit = 1 e9th token (1:1 ratio)
+        IF v_user_paid_with_e9th THEN
+            SET v_e9th_tokens_collected = v_total_cost;  -- 1 credit = 1 e9th token
+            
+            -- Record e9th token collection (only if table exists)
+            -- Check if table exists before inserting
+            IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'e9th_collections') THEN
+                INSERT INTO e9th_collections (
+                    user_id, transaction_id, credits_used, e9th_tokens_collected,
+                    job_id, songs_downloaded, collection_status
+                ) VALUES (
+                    p_user_id, v_transaction_id, v_total_cost, v_e9th_tokens_collected,
+                    p_job_id, p_songs_count, 'collected'
+                );
+            END IF;
+        END IF;
 
         COMMIT;
         SET p_success = TRUE;

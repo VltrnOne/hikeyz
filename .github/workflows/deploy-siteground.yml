@@ -72,38 +72,71 @@ jobs:
           echo "Using SSH key: ~/.ssh/siteground_key"
           
           # Attempt SSH connection with detailed error output
-          if ! ssh -v -i ~/.ssh/siteground_key -p $SG_PORT \
+          ssh -v -i ~/.ssh/siteground_key -p $SG_PORT \
             -o StrictHostKeyChecking=no \
             -o ConnectTimeout=30 \
             -o BatchMode=yes \
             -o LogLevel=ERROR \
             $SG_USER@$SG_HOST << 'ENDSSH'
-set -e
 echo "==================================="
 echo "Starting deployment..."
 echo "==================================="
 
-# Navigate to application directory
-cd ~/hikeyz
+# Navigate to application directory (create if doesn't exist)
+echo "Checking application directory..."
+if [ ! -d ~/hikeyz ]; then
+  echo "⚠️  Directory ~/hikeyz does not exist. Creating it..."
+  mkdir -p ~/hikeyz || { echo "❌ Failed to create directory"; exit 2; }
+fi
+
+cd ~/hikeyz || { echo "❌ Failed to change to directory"; exit 2; }
 
 # Pull latest changes from GitHub
 echo "Pulling latest changes from GitHub..."
-git fetch origin
-git reset --hard origin/main
-git clean -fd
+if [ -d .git ]; then
+  echo "Git repository found, updating..."
+  git fetch origin 2>&1 || echo "⚠️  Git fetch failed, continuing..."
+  git reset --hard origin/main 2>&1 || echo "⚠️  Git reset failed, continuing..."
+  git clean -fd 2>&1 || echo "⚠️  Git clean failed, continuing..."
+else
+  echo "⚠️  Not a git repository, initializing..."
+  git init || { echo "❌ Failed to initialize git"; exit 2; }
+  git remote add origin https://github.com/VltrnOne/hikeyz.git 2>&1 || \
+    git remote set-url origin https://github.com/VltrnOne/hikeyz.git 2>&1 || \
+    echo "⚠️  Failed to set git remote, continuing..."
+  git fetch origin 2>&1 || echo "⚠️  Initial fetch failed, continuing..."
+  git reset --hard origin/main 2>&1 || echo "⚠️  Initial reset failed, continuing..."
+fi
 
 # Update Python dependencies if requirements.txt changed
 echo "Checking for dependency updates..."
 if [ -f "requirements.txt" ]; then
-  source ~/virtualenv/hikeyz/bin/activate
-  pip install --upgrade pip --quiet
-  pip install -r requirements.txt --quiet
-  echo "Dependencies updated"
+  if [ -f ~/virtualenv/hikeyz/bin/activate ]; then
+    echo "Activating virtual environment..."
+    if source ~/virtualenv/hikeyz/bin/activate 2>&1; then
+      echo "Virtualenv activated successfully"
+      pip install --upgrade pip --quiet 2>&1 || echo "⚠️  Pip upgrade failed"
+      pip install -r requirements.txt --quiet 2>&1 || echo "⚠️  Dependency installation failed"
+      echo "Dependencies updated"
+    else
+      echo "⚠️  Virtualenv activation failed, trying without it..."
+      pip3 install --user --upgrade pip --quiet 2>&1 || echo "⚠️  Pip upgrade failed"
+      pip3 install --user -r requirements.txt --quiet 2>&1 || echo "⚠️  Dependency installation failed"
+    fi
+  else
+    echo "⚠️  Virtualenv not found at ~/virtualenv/hikeyz/bin/activate"
+    echo "Trying to install dependencies without virtualenv..."
+    pip3 install --user --upgrade pip --quiet 2>&1 || echo "⚠️  Pip upgrade failed"
+    pip3 install --user -r requirements.txt --quiet 2>&1 || echo "⚠️  Dependency installation failed"
+  fi
+else
+  echo "⚠️  requirements.txt not found, skipping dependency updates"
 fi
 
 # Create necessary directories
-mkdir -p ~/hikeyz/downloads
-mkdir -p ~/hikeyz/logs
+echo "Creating necessary directories..."
+mkdir -p ~/hikeyz/downloads 2>&1 || echo "⚠️  Failed to create downloads directory"
+mkdir -p ~/hikeyz/logs 2>&1 || echo "⚠️  Failed to create logs directory"
 
 # Restart Python application (if using SiteGround Python App)
 # Note: SiteGround Python apps auto-restart on file changes
@@ -116,21 +149,46 @@ echo "==================================="
 echo "Application should auto-restart"
 echo "Check logs in: ~/hikeyz/logs/"
 ENDSSH
-          then
+
+          SSH_EXIT_CODE=$?
+          if [ $SSH_EXIT_CODE -ne 0 ]; then
             echo ""
-            echo "❌ DEPLOYMENT FAILED: SSH Authentication Error"
+            if [ $SSH_EXIT_CODE -eq 255 ]; then
+              echo "❌ DEPLOYMENT FAILED: SSH Authentication Error (Exit code: $SSH_EXIT_CODE)"
+              echo ""
+              echo "Common causes:"
+              echo "1. SSH key not authorized in SiteGround cPanel"
+              echo "2. SSH key secret missing or incomplete in GitHub"
+              echo "3. Wrong SSH credentials in secrets"
+              echo ""
+              echo "To fix:"
+              echo "1. Verify SSH key is authorized: SiteGround cPanel → SSH Keys Manager → Authorize"
+              echo "2. Update GitHub secret SITEGROUND_SSH_KEY with complete private key"
+              echo "3. Check all 4 secrets are set correctly"
+            elif [ $SSH_EXIT_CODE -eq 2 ]; then
+              echo "❌ DEPLOYMENT FAILED: Command Error in Deployment Script (Exit code: $SSH_EXIT_CODE)"
+              echo ""
+              echo "This usually means a command inside the deployment script failed."
+              echo "Common causes:"
+              echo "1. Application directory doesn't exist and couldn't be created"
+              echo "2. Git repository not initialized or wrong remote URL"
+              echo "3. Virtual environment path incorrect"
+              echo "4. Python/pip not available or permissions issue"
+              echo "5. Missing dependencies or requirements.txt issues"
+              echo ""
+              echo "To fix:"
+              echo "1. Check the deployment logs above for the specific error"
+              echo "2. Verify the application directory exists: ~/hikeyz"
+              echo "3. Check virtualenv path: ~/virtualenv/hikeyz/bin/activate"
+              echo "4. Verify git repository is properly initialized"
+              echo "5. Test commands manually via SSH"
+            else
+              echo "❌ DEPLOYMENT FAILED: Unknown Error (Exit code: $SSH_EXIT_CODE)"
+              echo ""
+              echo "Check the logs above for details."
+            fi
             echo ""
-            echo "Common causes:"
-            echo "1. SSH key not authorized in SiteGround cPanel"
-            echo "2. SSH key secret missing or incomplete in GitHub"
-            echo "3. Wrong SSH credentials in secrets"
-            echo ""
-            echo "To fix:"
-            echo "1. Verify SSH key is authorized: SiteGround cPanel → SSH Keys Manager → Authorize"
-            echo "2. Update GitHub secret SITEGROUND_SSH_KEY with complete private key"
-            echo "3. Check all 4 secrets are set correctly"
-            echo ""
-            exit 1
+            exit $SSH_EXIT_CODE
           fi
       
       - name: Cleanup SSH key

@@ -76,35 +76,82 @@ document.querySelectorAll('.pricing-card').forEach(card => {
 // API Configuration
 const API_BASE_URL = 'https://hikeyz-api.onrender.com';
 
-// Handle Stripe Checkout
-const handleSignup = async (plan) => {
-    console.log('Signup initiated for plan:', plan);
+// Package ID mapping (from database schema_credits.sql)
+const PACKAGE_IDS = {
+    'starter': 1,    // Starter Pack - $25
+    'popular': 2,    // Popular Pack - $50
+    'premium': 3     // Premium Pack - $100
+};
+
+// Handle Stripe Checkout for Credit Packages
+const handleCreditPackagePurchase = async (packageName, event) => {
+    console.log('Purchase initiated for package:', packageName);
+
+    // Check if user is logged in
+    const sessionToken = localStorage.getItem('session_token');
+    if (!sessionToken) {
+        // User needs to login/register first
+        alert('Please login or create an account to purchase credit packages.');
+        // Open auth modal if it exists
+        if (typeof openAuthModal === 'function') {
+            openAuthModal();
+        } else {
+            // Redirect to login page or show login modal
+            window.location.href = '#signup';
+        }
+        return;
+    }
+
+    // Get package ID
+    const packageId = PACKAGE_IDS[packageName];
+    if (!packageId) {
+        alert('Invalid package selected. Please try again.');
+        return;
+    }
 
     // Show loading state
-    const button = event.target;
+    const button = event.target.closest('a, button') || event.target;
     const originalText = button.textContent;
     button.disabled = true;
     button.textContent = 'Processing...';
 
     try {
         // Create Stripe Checkout Session
-        const response = await fetch(`${API_BASE_URL}/api/checkout`, {
+        const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                tier: plan, // 'quick' or 'pro'
-                success_url: window.location.origin + '/progress.html?session_token={CHECKOUT_SESSION_ID}',
+                session_token: sessionToken,
+                package_id: packageId,
+                success_url: window.location.origin + '/success.html?session_id={CHECKOUT_SESSION_ID}',
                 cancel_url: window.location.origin + '/?canceled=true'
             })
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to create checkout session');
-        }
-
         const data = await response.json();
+
+        if (!response.ok) {
+            // Handle specific error cases
+            if (response.status === 401) {
+                alert('Your session has expired. Please login again.');
+                localStorage.removeItem('session_token');
+                if (typeof openAuthModal === 'function') {
+                    openAuthModal();
+                }
+            } else if (response.status === 403) {
+                alert('Please login with a registered account to purchase credit packages.');
+                if (typeof openAuthModal === 'function') {
+                    openAuthModal();
+                }
+            } else {
+                throw new Error(data.error || 'Failed to create checkout session');
+            }
+            button.disabled = false;
+            button.textContent = originalText;
+            return;
+        }
 
         // Redirect to Stripe Checkout
         if (data.checkout_url) {
@@ -115,29 +162,41 @@ const handleSignup = async (plan) => {
 
     } catch (error) {
         console.error('Checkout error:', error);
-        alert('Unable to start checkout. Please try again or contact support.');
+        alert('Unable to start checkout: ' + (error.message || 'Please try again or contact support.'));
         button.disabled = false;
         button.textContent = originalText;
     }
 };
 
+// Handle legacy time-based plans (Quick Pass, Day Pass, etc.)
+const handleTimeBasedPlan = async (plan, event) => {
+    console.log('Legacy plan purchase:', plan);
+    // For now, show message that these plans are being phased out
+    alert('Time-based plans are being phased out. Please create an account to purchase credit packages that never expire!');
+    if (typeof openAuthModal === 'function') {
+        openAuthModal();
+    }
+};
+
 // Add click handlers to pricing buttons
 document.addEventListener('DOMContentLoaded', () => {
-    // Quick Download button ($4.99)
-    const quickButtons = document.querySelectorAll('[data-plan="quick"]');
-    quickButtons.forEach(btn => {
+    // Credit Package buttons (require login)
+    const creditPackageButtons = document.querySelectorAll('[data-plan="starter"], [data-plan="popular"], [data-plan="premium"]');
+    creditPackageButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
-            handleSignup('quick');
+            const packageName = btn.getAttribute('data-plan');
+            handleCreditPackagePurchase(packageName, e);
         });
     });
 
-    // Pro Access button ($49.99)
-    const proButtons = document.querySelectorAll('[data-plan="pro"]');
-    proButtons.forEach(btn => {
+    // Legacy time-based plan buttons
+    const legacyButtons = document.querySelectorAll('[data-plan="quick"], [data-plan="pro"], [data-plan="day"]');
+    legacyButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
-            handleSignup('pro');
+            const plan = btn.getAttribute('data-plan');
+            handleTimeBasedPlan(plan, e);
         });
     });
 
@@ -146,7 +205,55 @@ document.addEventListener('DOMContentLoaded', () => {
     if (urlParams.get('canceled') === 'true') {
         alert('Checkout was canceled. Feel free to try again when you\'re ready!');
     }
+
+    // Handle successful payment return
+    const sessionId = urlParams.get('session_id');
+    if (sessionId) {
+        // User returned from Stripe checkout
+        // Verify payment and show success message
+        verifyPaymentStatus(sessionId);
+    }
 });
+
+// Verify payment status after returning from Stripe
+async function verifyPaymentStatus(stripeSessionId) {
+    const sessionToken = localStorage.getItem('session_token');
+    if (!sessionToken) {
+        console.log('No session token found');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/payment/verify`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                session_token: sessionToken,
+                stripe_session_id: stripeSessionId
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.paid) {
+            // Payment successful - show success message
+            alert(`✅ Payment successful!\n\n${data.message}\n\nYour new balance: ${data.credit_balance} credits (${data.songs_available} songs available)`);
+            
+            // Redirect to dashboard if it exists
+            if (window.location.pathname.includes('success.html')) {
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+            }
+        } else {
+            console.log('Payment verification:', data);
+        }
+    } catch (error) {
+        console.error('Error verifying payment:', error);
+    }
+}
 
 // Mobile menu toggle (for future implementation)
 const createMobileMenu = () => {

@@ -1176,46 +1176,95 @@ def purchase_credits():
         cursor = conn.cursor(dictionary=True)
 
         try:
-            # Call stored procedure to add credits
-            # Parameters: user_id (IN), package_id (IN), payment_method (IN), tx_hash (IN), success (OUT), error_message (OUT)
-            cursor.callproc('add_credits', [user_id, package_id, payment_method, tx_hash, None, None])
-
-            # Get OUT parameters (indices 4 and 5 for the OUT parameters)
-            cursor.execute("SELECT @_add_credits_4 AS success, @_add_credits_5 AS error_message")
-            result = cursor.fetchone()
-
-            if not result or not result.get('success'):
-                error_msg = result.get('error_message', 'Purchase failed') if result else 'Purchase failed'
-                return jsonify({'error': error_msg}), 400
-
-            # Get package details
-            cursor.execute("""
-                SELECT package_name, usd_amount, base_credits, bonus_credits, total_credits
-                FROM credit_packages
-                WHERE id = %s
-            """, (package_id,))
-
-            package = cursor.fetchone()
-
-            # Get new balance
-            cursor.execute("""
-                SELECT credit_balance FROM users WHERE id = %s
-            """, (user_id,))
-
-            user = cursor.fetchone()
-            new_balance = float(user['credit_balance'])
-
-            # Record E9th deposit if applicable
-            if payment_method == 'e9th_stablecoin' and tx_hash:
+            # If payment method is e9th_stablecoin, use the e9th deposit procedure
+            if payment_method == 'e9th_stablecoin' and tx_hash and wallet_address:
+                # Get package details first to get e9th amount
                 cursor.execute("""
-                    INSERT INTO e9th_deposits
-                    (user_id, e9th_stablecoin_amount, utility_tokens_issued,
-                     tx_hash, wallet_address, status)
-                    VALUES (%s, %s, %s, %s, %s, 'confirmed')
-                """, (user_id, package['total_credits'], package['total_credits'],
-                      tx_hash, wallet_address))
+                    SELECT package_name, usd_amount, base_credits, bonus_credits, total_credits
+                    FROM credit_packages
+                    WHERE id = %s
+                """, (package_id,))
+                package = cursor.fetchone()
+                
+                if not package:
+                    return jsonify({'error': 'Invalid package'}), 400
+                
+                # Use e9th amount = total_credits (1:1 ratio)
+                e9th_amount = float(package['total_credits'])
+                
+                # Call process_e9th_deposit procedure
+                cursor.callproc('process_e9th_deposit', [
+                    user_id,
+                    e9th_amount,
+                    tx_hash,
+                    wallet_address,
+                    package_id,
+                    None,  # OUT: success
+                    None,  # OUT: error_message
+                    None   # OUT: credits_issued
+                ])
+                
+                # Get OUT parameters
+                cursor.execute("SELECT @_process_e9th_deposit_5 AS success, @_process_e9th_deposit_6 AS error_message, @_process_e9th_deposit_7 AS credits_issued")
+                result = cursor.fetchone()
+                
+                if not result or not result.get('success'):
+                    error_msg = result.get('error_message', 'Purchase failed') if result else 'Purchase failed'
+                    conn.rollback()
+                    return jsonify({'error': error_msg}), 400
+                
+                credits_issued = float(result.get('credits_issued', 0))
+                
+                # Get new balance
+                cursor.execute("SELECT credit_balance FROM users WHERE id = %s", (user_id,))
+                user = cursor.fetchone()
+                new_balance = float(user['credit_balance'])
+                
+                conn.commit()
+                
+                return jsonify({
+                    'success': True,
+                    'package_name': package['package_name'],
+                    'usd_amount': float(package['usd_amount']),
+                    'base_credits': float(package['base_credits']),
+                    'bonus_credits': float(package['bonus_credits']),
+                    'total_credits_added': credits_issued,
+                    'e9th_amount': e9th_amount,
+                    'new_balance': new_balance,
+                    'tx_hash': tx_hash,
+                    'message': f"Successfully deposited {e9th_amount} e9th tokens. {credits_issued} credits added to your account!"
+                })
+            else:
+                # Use standard add_credits procedure for other payment methods
+                cursor.callproc('add_credits', [user_id, package_id, payment_method, tx_hash, None, None])
 
-            conn.commit()
+                # Get OUT parameters (indices 4 and 5 for the OUT parameters)
+                cursor.execute("SELECT @_add_credits_4 AS success, @_add_credits_5 AS error_message")
+                result = cursor.fetchone()
+
+                if not result or not result.get('success'):
+                    error_msg = result.get('error_message', 'Purchase failed') if result else 'Purchase failed'
+                    conn.rollback()
+                    return jsonify({'error': error_msg}), 400
+
+                # Get package details
+                cursor.execute("""
+                    SELECT package_name, usd_amount, base_credits, bonus_credits, total_credits
+                    FROM credit_packages
+                    WHERE id = %s
+                """, (package_id,))
+
+                package = cursor.fetchone()
+
+                # Get new balance
+                cursor.execute("""
+                    SELECT credit_balance FROM users WHERE id = %s
+                """, (user_id,))
+
+                user = cursor.fetchone()
+                new_balance = float(user['credit_balance'])
+
+                conn.commit()
 
             print(f"Credits purchased: User {user_id}, Package {package_id}, Amount {package['total_credits']}")
 
@@ -1236,6 +1285,444 @@ def purchase_credits():
 
     except Exception as e:
         print(f"Purchase credits error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/e9th/deposit', methods=['POST'])
+def process_e9th_deposit():
+    """
+    Process e9th token deposit and issue credits
+    
+    Request body:
+    {
+        "session_token": "usr_abc123...",
+        "e9th_amount": 25.0,
+        "tx_hash": "0xabc123...",
+        "wallet_address": "0x742d35Cc...",
+        "package_id": 1  // Optional: if depositing for a specific package
+    }
+    """
+    try:
+        data = request.get_json()
+        session_token = data.get('session_token')
+        e9th_amount = data.get('e9th_amount')
+        tx_hash = data.get('tx_hash')
+        wallet_address = data.get('wallet_address')
+        package_id = data.get('package_id')  # Optional
+
+        if not session_token or session_token not in active_sessions:
+            return jsonify({'error': 'Invalid session token'}), 401
+
+        session = active_sessions[session_token]
+        user_id = session['user_id']
+
+        if not e9th_amount or not tx_hash or not wallet_address:
+            return jsonify({'error': 'Missing required fields: e9th_amount, tx_hash, wallet_address'}), 400
+
+        # Connect to database
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Database connection failed'}), 500
+
+        cursor = conn.cursor(dictionary=True)
+
+        try:
+            # Call stored procedure to process e9th deposit
+            cursor.callproc('process_e9th_deposit', [
+                user_id, 
+                float(e9th_amount), 
+                tx_hash, 
+                wallet_address, 
+                package_id,
+                None,  # OUT: success
+                None,  # OUT: error_message
+                None   # OUT: credits_issued
+            ])
+
+            # Get OUT parameters
+            cursor.execute("SELECT @_process_e9th_deposit_5 AS success, @_process_e9th_deposit_6 AS error_message, @_process_e9th_deposit_7 AS credits_issued")
+            result = cursor.fetchone()
+
+            if not result or not result.get('success'):
+                error_msg = result.get('error_message', 'Deposit failed') if result else 'Deposit failed'
+                conn.rollback()
+                return jsonify({'error': error_msg}), 400
+
+            credits_issued = float(result.get('credits_issued', 0))
+
+            # Get new balance
+            cursor.execute("SELECT credit_balance FROM users WHERE id = %s", (user_id,))
+            user = cursor.fetchone()
+            new_balance = float(user['credit_balance'])
+
+            conn.commit()
+
+            print(f"E9th deposit processed: User {user_id}, Amount {e9th_amount} e9th, Credits issued: {credits_issued}")
+
+            return jsonify({
+                'success': True,
+                'e9th_amount': float(e9th_amount),
+                'credits_issued': credits_issued,
+                'new_balance': new_balance,
+                'tx_hash': tx_hash,
+                'message': f'Successfully deposited {e9th_amount} e9th tokens. {credits_issued} credits added to your account!'
+            })
+
+        except Exception as e:
+            conn.rollback()
+            print(f"E9th deposit error: {e}")
+            return jsonify({'error': str(e)}), 500
+        finally:
+            cursor.close()
+            conn.close()
+
+    except Exception as e:
+        print(f"Process e9th deposit error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/e9th/collections', methods=['GET'])
+def get_e9th_collections():
+    """
+    Get e9th token collections (admin or user-specific)
+    
+    Query params:
+    - session_token: Required for user-specific collections
+    - status: Filter by status (pending, collected, transferred, failed)
+    - limit: Number of records to return (default: 100)
+    """
+    try:
+        session_token = request.args.get('session_token')
+        status_filter = request.args.get('status')
+        limit = int(request.args.get('limit', 100))
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Database connection failed'}), 500
+
+        cursor = conn.cursor(dictionary=True)
+
+        try:
+            query = """
+                SELECT 
+                    ec.id,
+                    ec.user_id,
+                    u.email,
+                    ec.credits_used,
+                    ec.e9th_tokens_collected,
+                    ec.job_id,
+                    ec.songs_downloaded,
+                    ec.collection_status,
+                    ec.transfer_tx_hash,
+                    ec.collected_at,
+                    ec.transferred_at
+                FROM e9th_collections ec
+                JOIN users u ON ec.user_id = u.id
+                WHERE 1=1
+            """
+            params = []
+
+            # Filter by user if session token provided
+            if session_token and session_token in active_sessions:
+                session = active_sessions[session_token]
+                user_id = session.get('user_id')
+                if user_id:
+                    query += " AND ec.user_id = %s"
+                    params.append(user_id)
+
+            # Filter by status
+            if status_filter:
+                query += " AND ec.collection_status = %s"
+                params.append(status_filter)
+
+            query += " ORDER BY ec.collected_at DESC LIMIT %s"
+            params.append(limit)
+
+            cursor.execute(query, params)
+            collections = cursor.fetchall()
+
+            # Convert Decimal to float for JSON serialization
+            for collection in collections:
+                collection['credits_used'] = float(collection['credits_used'])
+                collection['e9th_tokens_collected'] = float(collection['e9th_tokens_collected'])
+
+            return jsonify({
+                'success': True,
+                'collections': collections,
+                'count': len(collections)
+            })
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    except Exception as e:
+        print(f"Get e9th collections error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/e9th/transfer', methods=['POST'])
+def transfer_collected_e9th():
+    """
+    Transfer collected e9th tokens to receiving wallet
+    
+    Request body:
+    {
+        "session_token": "usr_abc123...",  // Admin session required
+        "receiving_wallet_id": 1  // Optional: defaults to active wallet
+    }
+    
+    Note: This endpoint should be called by an admin or automated system
+    to transfer collected tokens to the receiving wallet.
+    """
+    try:
+        data = request.get_json()
+        session_token = data.get('session_token')
+        receiving_wallet_id = data.get('receiving_wallet_id', 1)  # Default to wallet ID 1
+
+        if not session_token or session_token not in active_sessions:
+            return jsonify({'error': 'Invalid session token'}), 401
+
+        # TODO: Add admin check here
+        # For now, allow any authenticated user (should be restricted to admin)
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Database connection failed'}), 500
+
+        cursor = conn.cursor(dictionary=True)
+
+        try:
+            # Call stored procedure to transfer collected tokens
+            cursor.callproc('transfer_collected_e9th', [
+                receiving_wallet_id,
+                None,  # OUT: success
+                None,  # OUT: error_message
+                None,  # OUT: transfer_id
+                None   # OUT: total_transferred
+            ])
+
+            # Get OUT parameters
+            cursor.execute("SELECT @_transfer_collected_e9th_2 AS success, @_transfer_collected_e9th_3 AS error_message, @_transfer_collected_e9th_4 AS transfer_id, @_transfer_collected_e9th_5 AS total_transferred")
+            result = cursor.fetchone()
+
+            if not result or not result.get('success'):
+                error_msg = result.get('error_message', 'Transfer failed') if result else 'Transfer failed'
+                conn.rollback()
+                return jsonify({'error': error_msg}), 400
+
+            transfer_id = result.get('transfer_id')
+            total_transferred = float(result.get('total_transferred', 0))
+
+            # Get receiving wallet address
+            cursor.execute("SELECT wallet_address, wallet_name FROM e9th_receiving_wallets WHERE id = %s", (receiving_wallet_id,))
+            wallet = cursor.fetchone()
+
+            # Update transfer status to 'processing' (actual blockchain transfer happens externally)
+            cursor.execute("UPDATE e9th_transfers SET transfer_status = 'processing' WHERE id = %s", (transfer_id,))
+
+            conn.commit()
+
+            print(f"E9th transfer initiated: Transfer ID {transfer_id}, Amount {total_transferred} e9th tokens")
+
+            return jsonify({
+                'success': True,
+                'transfer_id': transfer_id,
+                'total_tokens_transferred': total_transferred,
+                'receiving_wallet': wallet['wallet_address'],
+                'wallet_name': wallet['wallet_name'],
+                'status': 'processing',
+                'message': f'Transfer initiated. {total_transferred} e9th tokens will be transferred to {wallet["wallet_address"]}. Please complete the blockchain transaction.'
+            })
+
+        except Exception as e:
+            conn.rollback()
+            print(f"E9th transfer error: {e}")
+            return jsonify({'error': str(e)}), 500
+        finally:
+            cursor.close()
+            conn.close()
+
+    except Exception as e:
+        print(f"Transfer collected e9th error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/e9th/transfer/complete', methods=['POST'])
+def complete_e9th_transfer():
+    """
+    Mark e9th token transfer as completed (after blockchain transaction)
+    
+    Request body:
+    {
+        "session_token": "usr_abc123...",  // Admin session required
+        "transfer_id": 1,
+        "tx_hash": "0xabc123...",
+        "gas_fee": 0.001  // Optional
+    }
+    """
+    try:
+        data = request.get_json()
+        session_token = data.get('session_token')
+        transfer_id = data.get('transfer_id')
+        tx_hash = data.get('tx_hash')
+        gas_fee = data.get('gas_fee')
+
+        if not session_token or session_token not in active_sessions:
+            return jsonify({'error': 'Invalid session token'}), 401
+
+        if not transfer_id or not tx_hash:
+            return jsonify({'error': 'Missing required fields: transfer_id, tx_hash'}), 400
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Database connection failed'}), 500
+
+        cursor = conn.cursor(dictionary=True)
+
+        try:
+            # Update transfer record
+            update_query = """
+                UPDATE e9th_transfers 
+                SET transfer_status = 'completed',
+                    tx_hash = %s,
+                    completed_at = NOW()
+            """
+            params = [tx_hash]
+
+            if gas_fee:
+                update_query += ", gas_fee = %s"
+                params.append(float(gas_fee))
+
+            update_query += " WHERE id = %s"
+            params.append(transfer_id)
+
+            cursor.execute(update_query, params)
+
+            # Update collections with transfer tx hash
+            cursor.execute("""
+                UPDATE e9th_collections
+                SET transfer_tx_hash = %s
+                WHERE transfer_id = %s
+            """, (tx_hash, transfer_id))
+
+            conn.commit()
+
+            print(f"E9th transfer completed: Transfer ID {transfer_id}, TX Hash {tx_hash}")
+
+            return jsonify({
+                'success': True,
+                'transfer_id': transfer_id,
+                'tx_hash': tx_hash,
+                'message': 'Transfer marked as completed'
+            })
+
+        except Exception as e:
+            conn.rollback()
+            print(f"Complete e9th transfer error: {e}")
+            return jsonify({'error': str(e)}), 500
+        finally:
+            cursor.close()
+            conn.close()
+
+    except Exception as e:
+        print(f"Complete e9th transfer error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/e9th/receiving-wallet', methods=['GET', 'POST'])
+def manage_receiving_wallet():
+    """
+    Get or update receiving wallet configuration
+    
+    GET: Returns active receiving wallet
+    POST: Updates receiving wallet (admin only)
+    """
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Database connection failed'}), 500
+
+        cursor = conn.cursor(dictionary=True)
+
+        try:
+            if request.method == 'GET':
+                # Get active receiving wallet
+                cursor.execute("""
+                    SELECT id, wallet_address, wallet_name, network, 
+                           auto_transfer_enabled, min_collection_threshold
+                    FROM e9th_receiving_wallets
+                    WHERE is_active = TRUE
+                    LIMIT 1
+                """)
+                wallet = cursor.fetchone()
+
+                if wallet:
+                    wallet['min_collection_threshold'] = float(wallet['min_collection_threshold'])
+                    return jsonify({
+                        'success': True,
+                        'wallet': wallet
+                    })
+                else:
+                    return jsonify({
+                        'success': False,
+                        'message': 'No active receiving wallet configured'
+                    }), 404
+
+            elif request.method == 'POST':
+                # Update receiving wallet (admin only)
+                data = request.get_json()
+                session_token = data.get('session_token')
+
+                if not session_token or session_token not in active_sessions:
+                    return jsonify({'error': 'Invalid session token'}), 401
+
+                # TODO: Add admin check
+
+                wallet_id = data.get('wallet_id', 1)
+                wallet_address = data.get('wallet_address')
+                wallet_name = data.get('wallet_name')
+                auto_transfer_enabled = data.get('auto_transfer_enabled')
+                min_collection_threshold = data.get('min_collection_threshold')
+
+                update_fields = []
+                params = []
+
+                if wallet_address:
+                    update_fields.append("wallet_address = %s")
+                    params.append(wallet_address)
+
+                if wallet_name:
+                    update_fields.append("wallet_name = %s")
+                    params.append(wallet_name)
+
+                if auto_transfer_enabled is not None:
+                    update_fields.append("auto_transfer_enabled = %s")
+                    params.append(bool(auto_transfer_enabled))
+
+                if min_collection_threshold is not None:
+                    update_fields.append("min_collection_threshold = %s")
+                    params.append(float(min_collection_threshold))
+
+                if not update_fields:
+                    return jsonify({'error': 'No fields to update'}), 400
+
+                params.append(wallet_id)
+
+                cursor.execute(f"""
+                    UPDATE e9th_receiving_wallets
+                    SET {', '.join(update_fields)}, updated_at = NOW()
+                    WHERE id = %s
+                """, params)
+
+                conn.commit()
+
+                return jsonify({
+                    'success': True,
+                    'message': 'Receiving wallet updated successfully'
+                })
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    except Exception as e:
+        print(f"Manage receiving wallet error: {e}")
         return jsonify({'error': str(e)}), 500
 
 

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - HiKeyz</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .success-container {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .success-card {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .success-icon svg {
+            width: 50px;
+            height: 50px;
+            color: white;
+        }
+        .success-card h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+        .success-card p {
+            color: #718096;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        .credits-info {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        .credits-info h3 {
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+        .credits-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin: 0.5rem 0;
+        }
+        .btn-primary {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+        .loading {
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-card" id="successCard">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h1>Payment Successful!</h1>
+            <p id="statusMessage">Verifying your payment...</p>
+            <div class="credits-info" id="creditsInfo" style="display: none;">
+                <h3>Credits Added to Your Account</h3>
+                <div class="credits-amount" id="creditsAmount">0</div>
+                <p id="songsAvailable">0 songs available</p>
+            </div>
+            <a href="dashboard.html" class="btn-primary" id="dashboardBtn" style="display: none;">Go to Dashboard</a>
+            <a href="index.html" class="btn-primary" style="background: #718096; margin-left: 1rem;">Back to Home</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://hikeyz-api.onrender.com';
+        
+        // Get session_id from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const stripeSessionId = urlParams.get('session_id');
+        const sessionToken = localStorage.getItem('session_token');
+
+        if (!stripeSessionId) {
+            document.getElementById('statusMessage').textContent = 'No payment session found.';
+            document.getElementById('statusMessage').style.color = '#e53e3e';
+        } else if (!sessionToken) {
+            document.getElementById('statusMessage').textContent = 'Please login to verify your payment.';
+            document.getElementById('statusMessage').style.color = '#e53e3e';
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 3000);
+        } else {
+            // Verify payment
+            verifyPayment();
+        }
+
+        async function verifyPayment() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/payment/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_token: sessionToken,
+                        stripe_session_id: stripeSessionId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.paid) {
+                    // Payment verified successfully
+                    document.getElementById('statusMessage').textContent = data.message || 'Your payment has been processed successfully!';
+                    document.getElementById('statusMessage').style.color = '#48bb78';
+                    
+                    // Show credits info
+                    document.getElementById('creditsInfo').style.display = 'block';
+                    document.getElementById('creditsAmount').textContent = data.credit_balance || '0';
+                    document.getElementById('songsAvailable').textContent = `${data.songs_available || 0} songs available for download`;
+                    
+                    // Show dashboard button
+                    document.getElementById('dashboardBtn').style.display = 'inline-block';
+                    
+                    // Remove loading state
+                    document.getElementById('successCard').classList.remove('loading');
+                } else {
+                    // Payment not yet processed (webhook may be delayed)
+                    document.getElementById('statusMessage').textContent = 'Payment received! Credits are being added to your account. This may take a few moments.';
+                    document.getElementById('statusMessage').style.color = '#ed8936';
+                    
+                    // Retry after 3 seconds
+                    setTimeout(() => {
+                        verifyPayment();
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('Payment verification error:', error);
+                document.getElementById('statusMessage').textContent = 'Error verifying payment. Please check your dashboard or contact support.';
+                document.getElementById('statusMessage').style.color = '#e53e3e';
+                document.getElementById('dashboardBtn').style.display = 'inline-block';
+            }
+        }
+    </script>
+</body>
+</html>
+

@@ -139,6 +139,45 @@
         </div>
     </section>
 
+    <!-- About Keyz Section -->
+    <section class="about-keyz">
+        <div class="container">
+            <div class="section-header">
+                <h2>What Are Keyz?</h2>
+                <p>Your digital currency for SUNO downloads</p>
+            </div>
+            <div class="keyz-explanation">
+                <div class="keyz-card">
+                    <div class="keyz-icon">💎</div>
+                    <h3>Simple Credits</h3>
+                    <p>Keyz (formally 9-Keyz) are prepaid credits that let you download your SUNO songs. Think of them like tokens at an arcade - buy once, use whenever you need.</p>
+                </div>
+                <div class="keyz-card">
+                    <div class="keyz-icon">🎵</div>
+                    <h3>How It Works</h3>
+                    <p>Each song download costs <strong>0.35 Keyz</strong>. That means with 100 Keyz, you can download approximately 285 songs. The more Keyz you purchase, the more bonus Keyz you receive!</p>
+                </div>
+                <div class="keyz-card">
+                    <div class="keyz-icon">⏳</div>
+                    <h3>Never Expire</h3>
+                    <p>Your 9-Keyz balance never expires. Purchase credits today and use them whenever you create new music. No time pressure, no wasted credits.</p>
+                </div>
+                <div class="keyz-card">
+                    <div class="keyz-icon">🎁</div>
+                    <h3>Bonus Rewards</h3>
+                    <p>Buy larger credit packages and receive up to 100% bonus 9-Keyz! The more you invest, the more free downloads you unlock.</p>
+                </div>
+            </div>
+            <div class="keyz-example">
+                <h3>Quick Example</h3>
+                <p class="example-text">
+                    Purchase the <strong>Popular Pack</strong> for $50 → Receive <strong>75 9-Keyz</strong> (50 base + 25 bonus) →
+                    Download approximately <strong>214 songs</strong> → Credits remain in your account forever
+                </p>
+            </div>
+        </div>
+    </section>
+
     <!-- Pricing Section -->
     <section id="pricing" class="pricing">
         <div class="container">
@@ -441,8 +480,8 @@
             <div class="steps-grid">
                 <div class="step">
                     <div class="step-number">1</div>
-                    <h3>Purchase Credits</h3>
-                    <p>Choose a credit package with bonus offers. Credits never expire and are based on your download needs</p>
+                    <h3>Purchase Keyz</h3>
+                    <p>Choose a Keyz package with bonus offers. Buy 9-Keyz credits once and use them forever - they never expire</p>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
@@ -469,6 +508,66 @@
             </div>
         </div>
     </section>
+
+    <!-- Login/Register Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeAuthModal()">&times;</span>
+
+            <!-- Login Tab -->
+            <div id="loginTab" class="auth-tab active">
+                <h2>Login to Your Account</h2>
+                <p style="color: #718096; margin-bottom: 30px;">Access your 9-Keyz balance and download history</p>
+
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" required placeholder="your@email.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginPin">PIN (4-6 digits)</label>
+                        <input type="password" id="loginPin" required pattern="[0-9]{4,6}" maxlength="6" placeholder="Enter your PIN">
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="loginBtn">Login</button>
+
+                    <p class="switch-auth">
+                        Don't have an account? <a href="#" onclick="switchToRegister(event)">Create Account</a>
+                    </p>
+                </form>
+            </div>
+
+            <!-- Register Tab -->
+            <div id="registerTab" class="auth-tab">
+                <h2>Create Your Account</h2>
+                <p style="color: #718096; margin-bottom: 30px;">Join now and get started with 9-Keyz credits</p>
+
+                <form id="registerForm" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="registerEmail">Email Address</label>
+                        <input type="email" id="registerEmail" required placeholder="your@email.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registerPin">Create PIN (4-6 digits)</label>
+                        <input type="password" id="registerPin" required pattern="[0-9]{4,6}" maxlength="6" placeholder="Create a numeric PIN">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registerPinConfirm">Confirm PIN</label>
+                        <input type="password" id="registerPinConfirm" required pattern="[0-9]{4,6}" maxlength="6" placeholder="Re-enter your PIN">
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="registerBtn">Create Account</button>
+
+                    <p class="switch-auth">
+                        Already have an account? <a href="#" onclick="switchToLogin(event)">Login</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -510,6 +609,134 @@
             </div>
         </div>
     </footer>
+
+    <style>
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #718096;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: #2d3748;
+        }
+
+        .auth-tab {
+            display: none;
+        }
+
+        .auth-tab.active {
+            display: block;
+        }
+
+        .auth-tab h2 {
+            margin: 0 0 10px 0;
+            font-size: 2em;
+            color: #2d3748;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .switch-auth {
+            text-align: center;
+            margin-top: 20px;
+            color: #718096;
+        }
+
+        .switch-auth a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .switch-auth a:hover {
+            text-decoration: underline;
+        }
+
+        /* Account Button in Header */
+        .account-btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+        }
+
+        .account-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+        }
+    </style>
 
     <script src="script.js"></script>
     <script>
@@ -565,6 +792,177 @@
 
         // Initialize AdSense
         (adsbygoogle = window.adsbygoogle || []).push({});
+
+        // ===== Authentication Functions =====
+
+        // Open auth modal (default to login)
+        function openAuthModal() {
+            document.getElementById('authModal').style.display = 'block';
+            showLoginTab();
+        }
+
+        // Close auth modal
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+        }
+
+        // Switch to login tab
+        function switchToLogin(event) {
+            if (event) event.preventDefault();
+            showLoginTab();
+        }
+
+        // Switch to register tab
+        function switchToRegister(event) {
+            if (event) event.preventDefault();
+            showRegisterTab();
+        }
+
+        function showLoginTab() {
+            document.getElementById('loginTab').classList.add('active');
+            document.getElementById('registerTab').classList.remove('active');
+        }
+
+        function showRegisterTab() {
+            document.getElementById('loginTab').classList.remove('active');
+            document.getElementById('registerTab').classList.add('active');
+        }
+
+        // Handle login form submission
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('loginEmail').value;
+            const pin = document.getElementById('loginPin').value;
+            const btn = document.getElementById('loginBtn');
+
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/users/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, pin })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store session token
+                    localStorage.setItem('session_token', data.session_token);
+                    localStorage.setItem('user_email', data.user.email);
+
+                    // Success message
+                    alert(`Welcome back! You have ${data.user.songs_available} songs available.`);
+
+                    // Redirect to dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert('Login failed: ' + (data.error || 'Invalid email or PIN'));
+                    btn.disabled = false;
+                    btn.textContent = 'Login';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Network error. Please check your connection and try again.');
+                btn.disabled = false;
+                btn.textContent = 'Login';
+            }
+        }
+
+        // Handle register form submission
+        async function handleRegister(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('registerEmail').value;
+            const pin = document.getElementById('registerPin').value;
+            const pinConfirm = document.getElementById('registerPinConfirm').value;
+            const btn = document.getElementById('registerBtn');
+
+            // Validate PIN confirmation
+            if (pin !== pinConfirm) {
+                alert('PINs do not match. Please try again.');
+                return;
+            }
+
+            // Validate PIN format
+            if (!/^[0-9]{4,6}$/.test(pin)) {
+                alert('PIN must be 4-6 digits.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Creating Account...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/users/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, pin })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Success message
+                    alert(`Account created successfully! Welcome to HiKeyz.`);
+
+                    // Auto-login after registration
+                    localStorage.setItem('session_token', data.session_token || '');
+                    localStorage.setItem('user_email', data.email);
+
+                    // If we got a session token, go to dashboard, otherwise show login
+                    if (data.session_token) {
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        // Switch to login tab
+                        switchToLogin();
+                        document.getElementById('loginEmail').value = email;
+                    }
+                } else {
+                    if (response.status === 409) {
+                        alert('This email is already registered. Please login instead.');
+                        switchToLogin();
+                        document.getElementById('loginEmail').value = email;
+                    } else {
+                        alert('Registration failed: ' + (data.error || 'Please try again'));
+                    }
+                    btn.disabled = false;
+                    btn.textContent = 'Create Account';
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Network error. Please check your connection and try again.');
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
+        }
+
+        // Check if user is already logged in
+        window.addEventListener('DOMContentLoaded', function() {
+            const sessionToken = localStorage.getItem('session_token');
+            if (sessionToken) {
+                // Show account button in header if user is logged in
+                // (This would require adding an account button to the header)
+                console.log('User is logged in');
+            }
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('authModal');
+            if (event.target === modal) {
+                closeAuthModal();
+            }
+        });
+
+        // Note: Credit package buttons are handled by script.js
+        // They will check for login and trigger Stripe checkout
     </script>
 </body>
 </html>
